@@ -1,0 +1,58 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: '[]'
+    capabilities: Basic Install
+  name: keycloakclient-controller.v0.0.0
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: KeycloakClient is the Schema for the keycloakclients API.
+      displayName: Keycloak Client
+      kind: KeycloakClient
+      name: keycloakclients.keycloak.org
+      version: v1alpha1
+    - description: KeycloakRealm is the Schema for the keycloakrealms API
+      displayName: Keycloak Realm
+      kind: KeycloakRealm
+      name: keycloakrealms.keycloak.org
+      version: v1alpha1
+    - description: Keycloak is the Schema for the keycloaks API.
+      displayName: Keycloak
+      kind: Keycloak
+      name: keycloaks.keycloak.org
+      version: v1alpha1
+  description: Operator to handle KeycloakClients
+  displayName: Keycloakclient-Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      deployments: null
+    strategy: ""
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - keycloak
+  - keycloakclient
+  - kubernetes
+  - k8s
+  - operator
+  links:
+  - name: Keycloakclient Operator
+    url: https://keycloakclient-controller.domain
+  maturity: alpha
+  provider:
+    name: keycloak.org
+  version: 0.0.0

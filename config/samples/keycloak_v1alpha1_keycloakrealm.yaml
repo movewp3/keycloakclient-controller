@@ -1,0 +1,6 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakRealm
+metadata:
+  name: keycloakrealm-sample
+spec:
+  # TODO(user): Add fields here

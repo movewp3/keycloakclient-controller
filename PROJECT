@@ -1,0 +1,37 @@
+domain: org
+layout:
+- go.kubebuilder.io/v3
+plugins:
+  manifests.sdk.operatorframework.io/v2: {}
+  scorecard.sdk.operatorframework.io/v2: {}
+projectName: keycloakclient-controller
+repo: github.com/christianwoehrle/keycloakclient-controller
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: org
+  group: keycloak
+  kind: Keycloak
+  path: github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: org
+  group: keycloak
+  kind: KeycloakRealm
+  path: github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1
+  version: v1alpha1
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: org
+  group: keycloak
+  kind: KeycloakClient
+  path: github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1
+  version: v1alpha1
+version: "3"

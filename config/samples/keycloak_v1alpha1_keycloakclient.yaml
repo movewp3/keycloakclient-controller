@@ -1,0 +1,6 @@
+apiVersion: keycloak.org/v1alpha1
+kind: KeycloakClient
+metadata:
+  name: keycloakclient-sample
+spec:
+  # TODO(user): Add fields here

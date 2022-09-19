@@ -1,0 +1,289 @@
+apiVersion: operators.coreos.com/v1alpha1
+kind: ClusterServiceVersion
+metadata:
+  annotations:
+    alm-examples: |-
+      [
+        {
+          "apiVersion": "keycloak.org/v1alpha1",
+          "kind": "Keycloak",
+          "metadata": {
+            "name": "keycloak-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "keycloak.org/v1alpha1",
+          "kind": "KeycloakClient",
+          "metadata": {
+            "name": "keycloakclient-sample"
+          },
+          "spec": null
+        },
+        {
+          "apiVersion": "keycloak.org/v1alpha1",
+          "kind": "KeycloakRealm",
+          "metadata": {
+            "name": "keycloakrealm-sample"
+          },
+          "spec": null
+        }
+      ]
+    capabilities: Basic Install
+    operators.operatorframework.io/builder: operator-sdk-v1.23.0
+    operators.operatorframework.io/project_layout: go.kubebuilder.io/v3
+  name: keycloakclient-controller.v0.0.1
+  namespace: placeholder
+spec:
+  apiservicedefinitions: {}
+  customresourcedefinitions:
+    owned:
+    - description: KeycloakClient is the Schema for the keycloakclients API.
+      displayName: Keycloak Client
+      kind: KeycloakClient
+      name: keycloakclients.keycloak.org
+      version: v1alpha1
+    - description: KeycloakRealm is the Schema for the keycloakrealms API
+      displayName: Keycloak Realm
+      kind: KeycloakRealm
+      name: keycloakrealms.keycloak.org
+      version: v1alpha1
+    - description: Keycloak is the Schema for the keycloaks API.
+      displayName: Keycloak
+      kind: Keycloak
+      name: keycloaks.keycloak.org
+      version: v1alpha1
+  description: Operator to handle KeycloakClients
+  displayName: Keycloakclient-Operator
+  icon:
+  - base64data: ""
+    mediatype: ""
+  install:
+    spec:
+      clusterPermissions:
+      - rules:
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakclients
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakclients/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakclients/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakrealms
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakrealms/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloakrealms/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloaks
+          verbs:
+          - create
+          - delete
+          - get
+          - list
+          - patch
+          - update
+          - watch
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloaks/finalizers
+          verbs:
+          - update
+        - apiGroups:
+          - keycloak.org
+          resources:
+          - keycloaks/status
+          verbs:
+          - get
+          - patch
+          - update
+        - apiGroups:
+          - authentication.k8s.io
+          resources:
+          - tokenreviews
+          verbs:
+          - create
+        - apiGroups:
+          - authorization.k8s.io
+          resources:
+          - subjectaccessreviews
+          verbs:
+          - create
+        serviceAccountName: keycloakclient-controller-controller-manager
+      deployments:
+      - label:
+          control-plane: controller-manager
+        name: keycloakclient-controller-controller-manager
+        spec:
+          replicas: 1
+          selector:
+            matchLabels:
+              control-plane: controller-manager
+          strategy: {}
+          template:
+            metadata:
+              annotations:
+                kubectl.kubernetes.io/default-container: manager
+              labels:
+                control-plane: controller-manager
+            spec:
+              containers:
+              - args:
+                - --secure-listen-address=0.0.0.0:8443
+                - --upstream=http://127.0.0.1:8080/
+                - --logtostderr=true
+                - --v=0
+                image: gcr.io/kubebuilder/kube-rbac-proxy:v0.13.0
+                name: kube-rbac-proxy
+                ports:
+                - containerPort: 8443
+                  name: https
+                  protocol: TCP
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 5m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              - args:
+                - --health-probe-bind-address=:8081
+                - --metrics-bind-address=127.0.0.1:8080
+                - --leader-elect
+                command:
+                - /manager
+                image: christianwoehrle/keycloakclient-controller:exploratory2
+                livenessProbe:
+                  httpGet:
+                    path: /healthz
+                    port: 8081
+                  initialDelaySeconds: 15
+                  periodSeconds: 20
+                name: manager
+                readinessProbe:
+                  httpGet:
+                    path: /readyz
+                    port: 8081
+                  initialDelaySeconds: 5
+                  periodSeconds: 10
+                resources:
+                  limits:
+                    cpu: 500m
+                    memory: 128Mi
+                  requests:
+                    cpu: 10m
+                    memory: 64Mi
+                securityContext:
+                  allowPrivilegeEscalation: false
+                  capabilities:
+                    drop:
+                    - ALL
+              securityContext:
+                runAsNonRoot: true
+              serviceAccountName: keycloakclient-controller-controller-manager
+              terminationGracePeriodSeconds: 10
+      permissions:
+      - rules:
+        - apiGroups:
+          - ""
+          resources:
+          - configmaps
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - coordination.k8s.io
+          resources:
+          - leases
+          verbs:
+          - get
+          - list
+          - watch
+          - create
+          - update
+          - patch
+          - delete
+        - apiGroups:
+          - ""
+          resources:
+          - events
+          verbs:
+          - create
+          - patch
+        serviceAccountName: keycloakclient-controller-controller-manager
+    strategy: deployment
+  installModes:
+  - supported: false
+    type: OwnNamespace
+  - supported: false
+    type: SingleNamespace
+  - supported: false
+    type: MultiNamespace
+  - supported: true
+    type: AllNamespaces
+  keywords:
+  - keycloak
+  - keycloakclient
+  - kubernetes
+  - k8s
+  - operator
+  links:
+  - name: Keycloakclient Operator
+    url: https://keycloakclient-controller.domain
+  maturity: alpha
+  provider:
+    name: keycloak.org
+  version: 0.0.1
