@@ -17,10 +17,10 @@ jobs:
       env:
         GOROOT: ""
       with:
-        target: code/compile
+        target: build
     - name: Verify vendor directory
       uses: ouzi-dev/go-make-action@v1.3.0
       env:
         GOROOT: ""
       with:
-        target: setup/mod/verify
+        target: verify
