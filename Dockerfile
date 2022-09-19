@@ -26,4 +26,4 @@ WORKDIR /
 COPY --from=builder /workspace/keycloakclient-controller .
 USER 65532:65532
 
-ENTRYPOINT ["/manager"]
+ENTRYPOINT ["/keycloakclient-controller"]
