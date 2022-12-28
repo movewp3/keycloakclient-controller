@@ -1,8 +1,6 @@
 package controllers
 
 import (
-	"fmt"
-
 	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
 )
@@ -32,7 +30,6 @@ func (i *DedicatedKeycloakRealmReconciler) ReconcileRealmCreate(state *common.Re
 	desired := common.DesiredClusterState{}
 
 	desired.AddAction(i.getKeycloakDesiredState())
-	desired.AddAction(i.getDesiredRealmState(state, cr))
 
 	return desired
 }
@@ -40,7 +37,6 @@ func (i *DedicatedKeycloakRealmReconciler) ReconcileRealmCreate(state *common.Re
 func (i *DedicatedKeycloakRealmReconciler) ReconcileRealmDelete(state *common.RealmState, cr *kc.KeycloakRealm) common.DesiredClusterState {
 	desired := common.DesiredClusterState{}
 	desired.AddAction(i.getKeycloakDesiredState())
-	desired.AddAction(i.getDesiredRealmState(state, cr))
 	return desired
 }
 
@@ -49,22 +45,4 @@ func (i *DedicatedKeycloakRealmReconciler) getKeycloakDesiredState() common.Clus
 	return &common.PingAction{
 		Msg: "check if keycloak is available",
 	}
-}
-
-func (i *DedicatedKeycloakRealmReconciler) getDesiredRealmState(state *common.RealmState, cr *kc.KeycloakRealm) common.ClusterAction {
-	if cr.DeletionTimestamp != nil {
-		return &common.DeleteRealmAction{
-			Ref: cr,
-			Msg: fmt.Sprintf("removing realm %v/%v", cr.Namespace, cr.Spec.Realm.Realm),
-		}
-	}
-
-	if state.Realm == nil {
-		return &common.CreateRealmAction{
-			Ref: cr,
-			Msg: fmt.Sprintf("create realm %v/%v", cr.Namespace, cr.Spec.Realm.Realm),
-		}
-	}
-
-	return nil
 }

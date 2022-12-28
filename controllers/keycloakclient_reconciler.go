@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"bytes"
 	"fmt"
 
 	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
@@ -36,6 +37,14 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 	}
 
 	if state.Client == nil {
+		if cr.Spec.Client.Secret == "" {
+			if state.ClientSecret != nil {
+				if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
+					logKcc.Info("reconstruct Secret for " + cr.Spec.Client.ID)
+					cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+				}
+			}
+		}
 		desired.AddAction(i.getCreatedClientState(state, cr))
 	} else {
 		desired.AddAction(i.getUpdatedClientState(state, cr))
