@@ -1,6 +1,6 @@
 module github.com/christianwoehrle/keycloakclient-controller
 
-go 1.18
+go 1.19
 
 require (
 	github.com/json-iterator/go v1.1.12
