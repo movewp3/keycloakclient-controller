@@ -28,6 +28,5 @@ jobs:
         make install
         make installKeycloak
         kubectl get ingress -A 
-        curl http://keycloak.local:80/auth/
         make test/e2e
         make cluster/clean

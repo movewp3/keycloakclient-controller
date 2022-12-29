@@ -166,9 +166,7 @@ installKeycloak:
 	@kubectl get ingress -A -owide
 	@echo svc ================================
 	@kubectl get svc -A -owide
-	@echo curl  ================================
 	@cat /etc/hosts
-	@curl http://keycloak.local:80/auth/
 
 
 
