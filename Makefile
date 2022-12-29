@@ -151,7 +151,7 @@ installKeycloak:
 	@helm upgrade --install keycloak codecentric/keycloakx --values "config/installKeycloak/values.yaml" -n $(NAMESPACE)
 	@kubectl apply -f config/installKeycloak/credential-keycloak-test.yaml -n $(NAMESPACE)
 	@kubectl get po -A 
-	@@echo sleep 240 ==================
+	@echo sleep 240 ==================
 	@sleep 240
 	@kubectl apply -f config/installKeycloak/ingress.yaml -n $(NAMESPACE)
 	@kubectl get po -A 

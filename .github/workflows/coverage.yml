@@ -13,9 +13,8 @@ jobs:
         uses: actions/setup-go@v3
         with:
           go-version: '1.19'
-      - name: Run e2e tests
+      - name: Run tests
         run: | 
           make test
-          curl http://keycloak.local:80/auth/
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
