@@ -1,3 +1,6 @@
+## <div align="center"> [![PkgGoDev](https://pkg.go.dev/badge/github.com/christianwoehrle/keycloakclient-controller)](https://pkg.go.dev/github.com/christianwoehrle/keycloakclient-controller)    [![Go Report Card](https://goreportcard.com/badge/github.com/christianwoehrle/keycloakclient-controller)](https://goreportcard.com/report/github.com/christianwoehrle/keycloakclient-controller)   [![codecov](https://codecov.io/gh/christianwoehrle/keycloakclient-controller/branch/main/graph/badge.svg?token=tNKcOjlxLo)](https://codecov.io/gh/christianwoehrle/keycloakclient-controller)      [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+</div>
+
 # keycloakclient-controller
 // TODO(user): Add simple overview of use/purpose
 
