@@ -37,25 +37,6 @@ func getDummyState() *common.RealmState {
 	}
 }
 
-func TestKeycloakRealmReconciler_ReconcileRealmDelete(t *testing.T) {
-	// given
-	keycloak := v1alpha1.Keycloak{}
-	reconciler := NewDedicatedKeycloakRealmReconciler(keycloak)
-
-	realm := getDummyRealm()
-	state := getDummyState()
-	realm.DeletionTimestamp = &v1.Time{}
-
-	// when
-	desiredState := reconciler.Reconcile(state, realm)
-
-	// then
-	// 0 - check keycloak available
-	// 1 - delete realm
-	assert.IsType(t, &common.PingAction{}, desiredState[0])
-	assert.IsType(t, &common.DeleteRealmAction{}, desiredState[1])
-}
-
 func TestKeycloakRealmReconciler_Update(t *testing.T) {
 	// given
 	keycloak := v1alpha1.Keycloak{}
