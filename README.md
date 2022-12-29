@@ -2,10 +2,22 @@
 </div>
 
 # keycloakclient-controller
-// TODO(user): Add simple overview of use/purpose
+The keycloakclient-controller **manages Keycloak Clients in independent Keycloak Installations**. 
+
+To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-CustomResource** is created, and the keycloakclient-controller sees to creating, changing, deleting the KeycloakClient as specified with the CustomResource.
+
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+This Operator has it's origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
+If you look for the official KeycloakOperator from RedHat, please look into the [KeycloakOperator](https://github.com/keycloak/keycloak/tree/main/operator).
+
+The Operator is opinionated in a way that it expects that Keycloak and
+the KeyclokRealm are already set up (i.e. with one of the available Helm Charts) and it only has
+to handle the KeycloakClients for a Keycloak Installation and a specific realm.
+
+This fits our need as we set up Keycloak and the realm with Helm, and we have a lot of microservices that require their own KeycloakClient.
+The Microservices are deployed via Helm and it is easy to simply deploy a KeycloakClient Resource together with the other artefacts of the Microservice and let
+the Operator handle the creation of the KeycloakClient in Keycloak.
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
@@ -15,7 +27,7 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 1. Install Instances of Custom Resources:
 
 ```sh
-kubectl apply -f config/samples/
+make install
 ```
 
 2. Build and push your image to the location specified by `IMG`:
@@ -95,3 +107,17 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
+function myFunction() {
+// Get the text field
+var copyText = document.getElementById("myInput");
+
+// Select the text field
+copyText.select();
+copyText.setSelectionRange(0, 99999); // For mobile devices
+
+// Copy the text inside the text field
+navigator.clipboard.writeText(copyText.value);
+
+// Alert the copied text
+alert("Copied the text: " + copyText.value);
+} 

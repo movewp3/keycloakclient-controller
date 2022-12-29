@@ -136,6 +136,46 @@ endif
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
+	@$kubectl create namespace $(NAMESPACE) || true
+	@	@kubectl apply -f deploy/crds/ || true
+	@kubectl apply -f deploy/clusterroles/ || true
+	@kubectl apply -f deploy/role.yaml -n $(NAMESPACE) || true
+	@kubectl apply -f deploy/role_binding.yaml -n $(NAMESPACE) || true
+	@kubectl apply -f deploy/service_account.yaml -n $(NAMESPACE) || true
+
+# see https://artifacthub.io/packages/helm/codecentric/keycloakx?modal=install
+.PHONY: cluster/installKeycloak
+cluster/installKeycloak:
+	@helm repo add codecentric "https://codecentric.github.io/helm-charts"
+	@helm repo update
+	@kubectl apply -f deploy/installKeycloak/realm.yaml -n $(NAMESPACE)
+	@helm upgrade --install keycloak codecentric/keycloakx --values "deploy/installKeycloak/values.yaml" -n $(NAMESPACE)
+	@kubectl apply -f deploy/installKeycloak/credential-keycloak-test.yaml -n $(NAMESPACE)
+	@kubectl get po -A 
+	@@echo sleep 240 ==================
+	@leep 240
+	@kubectl apply -f deploy/installKeycloak/ingress.yaml -n $(NAMESPACE)
+	@kubectl get po -A 
+	@kubectl get ingress -A -owide
+	@echo ingress ================================
+	@kubectl get ingress -A -owide
+	@echo ingress ================================
+	@kubectl get ingress -A -oyaml
+	@echo sleep 120 ==================
+	@sleep 120
+	@echo ingress ================================
+	@kubectl get ingress -A -owide
+	@echo svc ================================
+	@kubectl get svc -A -owide
+	@echo curl  ================================
+	@cat /etc/hosts
+	@curl http://keycloak.local:80/auth/
+
+
+
+
+
+
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
