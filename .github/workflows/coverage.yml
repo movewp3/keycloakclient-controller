@@ -15,7 +15,5 @@ jobs:
       - name: Run e2e tests
          run: |
            make test  
-#      - name: Run coverage
-#        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./pkg/... ./controllers/...
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
