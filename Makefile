@@ -170,6 +170,10 @@ installKeycloak:
 
 
 
+.PHONY: test/e2e
+test/e2e: 
+  @echo Running e2e local tests:
+  operator-sdk test local --go-test-flags "-tags=integration -coverpkg ./... -coverprofile cover-e2e.coverprofile -covermode=count -timeout 0" --operator-namespace $(NAMESPACE) --up-local --debug --verbose ./test/e2e
 
 
 
