@@ -21,7 +21,7 @@ jobs:
     - name: Configure Minikube
       run: |
         minikube addons enable ingress
-        hack/modify_etc_hosts.sh "keycloak.local"
+        config/hack/modify_etc_hosts.sh "keycloak.local"
         nslookup "keycloak.local"
     - name: Run e2e tests
       run: |

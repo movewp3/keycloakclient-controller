@@ -55,10 +55,10 @@ var (
 )
 
 // Keycloak is the Schema for the keycloaks API.
-//+genclient
-//+k8s:openapi-gen=true
-//+kubebuilder:subresource:status
-//+kubebuilder:object:root=true
+// +genclient
+// +k8s:openapi-gen=true
+// +kubebuilder:subresource:status
+// +kubebuilder:object:root=true
 type Keycloak struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -68,7 +68,7 @@ type Keycloak struct {
 }
 
 // KeycloakList contains a list of Keycloak.
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 type KeycloakList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

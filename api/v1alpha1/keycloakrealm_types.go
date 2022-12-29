@@ -191,7 +191,7 @@ type KeycloakRealmStatus struct {
 // +genclient
 // +k8s:openapi-gen=true
 // +kubebuilder:subresource:status
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 type KeycloakRealm struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
@@ -201,7 +201,7 @@ type KeycloakRealm struct {
 }
 
 // KeycloakRealmList contains a list of KeycloakRealm
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 type KeycloakRealmList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`

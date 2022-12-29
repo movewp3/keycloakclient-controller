@@ -5,6 +5,8 @@
 # - use environment variables to overwrite this value (e.g export VERSION=0.0.2)
 VERSION ?= 0.0.1
 
+
+NAMESPACE=keycloak
 # CHANNELS define the bundle channels used in the bundle.
 # Add a new line here if you would like to change its default config. (E.g CHANNELS = "candidate,fast,stable")
 # To re-generate a bundle for other specific channels without changing the standard setup, you can:
@@ -107,7 +109,7 @@ verify:
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile=coverage.txt
 
 ##@ Build
 
@@ -136,25 +138,22 @@ endif
 .PHONY: install
 install: manifests kustomize ## Install CRDs into the K8s cluster specified in ~/.kube/config.
 	$(KUSTOMIZE) build config/crd | kubectl apply -f -
-	@$kubectl create namespace $(NAMESPACE) || true
-	@	@kubectl apply -f deploy/crds/ || true
-	@kubectl apply -f deploy/clusterroles/ || true
-	@kubectl apply -f deploy/role.yaml -n $(NAMESPACE) || true
-	@kubectl apply -f deploy/role_binding.yaml -n $(NAMESPACE) || true
-	@kubectl apply -f deploy/service_account.yaml -n $(NAMESPACE) || true
+	@kubectl create namespace keycloak || true
+	$(KUSTOMIZE) build config/rbac | kubectl apply -n $(NAMESPACE) -f -
+
 
 # see https://artifacthub.io/packages/helm/codecentric/keycloakx?modal=install
 .PHONY: cluster/installKeycloak
-cluster/installKeycloak:
+installKeycloak:
 	@helm repo add codecentric "https://codecentric.github.io/helm-charts"
 	@helm repo update
-	@kubectl apply -f deploy/installKeycloak/realm.yaml -n $(NAMESPACE)
-	@helm upgrade --install keycloak codecentric/keycloakx --values "deploy/installKeycloak/values.yaml" -n $(NAMESPACE)
-	@kubectl apply -f deploy/installKeycloak/credential-keycloak-test.yaml -n $(NAMESPACE)
+	@kubectl apply -f config/installKeycloak/realm.yaml -n $(NAMESPACE)
+	@helm upgrade --install keycloak codecentric/keycloakx --values "config/installKeycloak/values.yaml" -n $(NAMESPACE)
+	@kubectl apply -f config/installKeycloak/credential-keycloak-test.yaml -n $(NAMESPACE)
 	@kubectl get po -A 
 	@@echo sleep 240 ==================
-	@leep 240
-	@kubectl apply -f deploy/installKeycloak/ingress.yaml -n $(NAMESPACE)
+	@sleep 240
+	@kubectl apply -f config/installKeycloak/ingress.yaml -n $(NAMESPACE)
 	@kubectl get po -A 
 	@kubectl get ingress -A -owide
 	@echo ingress ================================

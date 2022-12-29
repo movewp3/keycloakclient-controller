@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	SecretKind                = "Secret"
+	SecretKind = "Secret"
 )
 
 func WatchSecondaryResource(c controller.Controller, controllerName string, resourceKind string, objectTypetoWatch client.Object, cr runtime.Object) error {
