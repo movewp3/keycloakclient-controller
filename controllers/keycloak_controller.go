@@ -83,9 +83,6 @@ func (r *KeycloakReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		return err
 	}
 
-	if err := common.WatchSecondaryResource(c, KeycloakControllerName, common.ServiceKind, &corev1.Service{}, &keycloakv1alpha1.Keycloak{}); err != nil {
-		return err
-	}
 	ctx := context.Background()
 	ctx, cancel := context.WithCancel(ctx)
 	//client := mgr.GetClient()
