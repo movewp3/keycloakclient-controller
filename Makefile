@@ -173,10 +173,7 @@ installKeycloak:
 .PHONY: test/e2e
 test/e2e: 
 	@echo Running e2e local tests:
-	@operator-sdk test local --go-test-flags "-tags=integration -coverpkg ./... -coverprofile cover-e2e.coverprofile -covermode=count -timeout 0" --operator-namespace $(NAMESPACE) --up-local --debug --verbose ./test/e2e
-
-
-
+	@go test test/e2e/...  -coverprofile=coverage.txt
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
