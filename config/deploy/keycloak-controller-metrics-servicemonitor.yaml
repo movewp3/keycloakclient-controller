@@ -1,0 +1,18 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    monitoring-key: middleware
+    name: keycloak-controller
+  name: keycloak-controller-metrics
+  namespace: keycloak
+spec:
+  endpoints:
+  - bearerTokenSecret:
+      key: ""
+    port: http-metrics
+  namespaceSelector: {}
+  selector:
+    matchLabels:
+      monitoring-key: middleware
+      name: keycloak-controller

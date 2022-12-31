@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    monitoring-key: middleware
+    name: keycloak-controller
+  name: keycloak-controller-metrics
+  namespace: keycloak
+spec:
+  ports:
+  - name: http-metrics
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    name: keycloak-operator
+  sessionAffinity: None
+  type: ClusterIP
