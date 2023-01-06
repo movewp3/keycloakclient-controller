@@ -9,13 +9,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"testing"
 	"time"
 
 	v1 "k8s.io/api/core/v1"
 
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
-	"k8s.io/client-go/kubernetes/scheme"
 
 	"k8s.io/client-go/tools/clientcmd"
 
@@ -24,8 +23,6 @@ import (
 	"github.com/pkg/errors"
 
 	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/stretchr/testify/assert"
-
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
@@ -33,34 +30,40 @@ import (
 )
 
 func getClient() *kubernetes.Clientset {
-	kubeconfig := filepath.Join(
-		os.Getenv("HOME"), ".kube", "config",
-	)
+	GinkgoWriter.Printf("getClient \n")
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		kubeconfig = filepath.Join(
+			os.Getenv("HOME"), ".kube", "config",
+		)
+
+	}
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 	if err != nil {
 		log.Fatal(err)
 	}
-	err = keycloakv1alpha1.AddToScheme(scheme.Scheme)
+
 	Expect(err).NotTo(HaveOccurred())
 	clientset, err := kubernetes.NewForConfig(config)
+
 	if err != nil {
 		log.Fatal(err)
 	}
+	GinkgoWriter.Printf("getClient return\n")
 	return clientset
-
 }
 
-type Condition func(t *testing.T, c kubernetes.Interface) error
+type Condition func(c kubernetes.Interface) error
 
 type ResponseCondition func(response *http.Response) error
 
 type ClientCondition func(authenticatedClient common.KeycloakInterface) error
 
-func WaitForCondition(t *testing.T, c kubernetes.Interface, cond Condition) error {
-	t.Logf("waiting up to %v for condition", pollTimeout)
+func WaitForCondition(c kubernetes.Interface, cond Condition) error {
+	GinkgoWriter.Printf("waiting up to %v for condition", pollTimeout)
 	var err error = fmt.Errorf("Cnodition not fulfilled")
 	for start := time.Now(); time.Since(start) < pollTimeout; time.Sleep(pollRetryInterval) {
-		err = cond(t, c)
+		err = cond(c)
 		if err == nil {
 			return nil
 		}
@@ -68,8 +71,8 @@ func WaitForCondition(t *testing.T, c kubernetes.Interface, cond Condition) erro
 	return err
 }
 
-func WaitForConditionWithClient(t *testing.T, keycloakCR keycloakv1alpha1.Keycloak, cond ClientCondition) error {
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+func WaitForConditionWithClient(keycloakCR keycloakv1alpha1.Keycloak, cond ClientCondition) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		authenticatedClient, err := MakeAuthenticatedClient(keycloakCR)
 		if err != nil {
 			return err
@@ -85,32 +88,32 @@ func MakeAuthenticatedClient(keycloakCR keycloakv1alpha1.Keycloak) (common.Keycl
 
 // Stolen from https://github.com/kubernetes/kubernetes/blob/master/test/e2e/framework/util.go
 // Then rewritten to use internal condition statements.
-func WaitForStatefulSetReplicasReady(t *testing.T, c kubernetes.Interface, statefulSetName, ns string) error {
-	t.Logf("waiting up to %v for StatefulSet %s to have all replicas ready", pollTimeout, statefulSetName)
-	return WaitForCondition(t, c, func(t *testing.T, c kubernetes.Interface) error {
+func WaitForStatefulSetReplicasReady(c kubernetes.Interface, statefulSetName, ns string) error {
+	GinkgoWriter.Printf("waiting up to %v for StatefulSet %s to have all replicas ready", pollTimeout, statefulSetName)
+	return WaitForCondition(c, func(c kubernetes.Interface) error {
 		sts, err := c.AppsV1().StatefulSets(ns).Get(context.TODO(), statefulSetName, metav1.GetOptions{})
 		if err != nil {
 			return errors.Errorf("get StatefulSet %s failed, ignoring for %v: %v", statefulSetName, pollRetryInterval, err)
 		}
 		if sts.Status.ReadyReplicas == *sts.Spec.Replicas {
-			t.Logf("all %d replicas of StatefulSet %s are ready.", sts.Status.ReadyReplicas, statefulSetName)
+			GinkgoWriter.Printf("all %d replicas of StatefulSet %s are ready.", sts.Status.ReadyReplicas, statefulSetName)
 			return nil
 		}
 		return errors.Errorf("statefulSet %s found but there are %d ready replicas and %d total replicas", statefulSetName, sts.Status.ReadyReplicas, *sts.Spec.Replicas)
 	})
 }
 
-func WaitForKeycloakToBeReady(t *testing.T, namespace string, name string) error {
+func WaitForKeycloakToBeReady(namespace string, name string) error {
 	keycloakCR := &keycloakv1alpha1.Keycloak{}
 
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		err := GetNamespacedKeycloak(namespace, name, keycloakCR)
 		if err != nil {
 			return err
 		}
 
 		if !keycloakCR.Status.Ready {
-			t.Logf("Condition KeycloakReady not yet successful for %s", keycloakCR.Name)
+			GinkgoWriter.Printf("Condition KeycloakReady not yet successful for %s", keycloakCR.Name)
 
 			keycloakCRParsed, err := json.Marshal(keycloakCR)
 			if err != nil {
@@ -119,22 +122,22 @@ func WaitForKeycloakToBeReady(t *testing.T, namespace string, name string) error
 
 			return errors.Errorf("keycloak is not ready \nCurrent CR value: %s", string(keycloakCRParsed))
 		}
-		t.Logf("Condition KeycloakReady successful for %s", keycloakCR.Name)
+		GinkgoWriter.Printf("Condition KeycloakReady successful for %s", keycloakCR.Name)
 		return nil
 	})
 }
 
-func WaitForRealmToBeReady(t *testing.T, namespace string) error {
+func WaitForRealmToBeReady(namespace string) error {
 	keycloakRealmCR := &keycloakv1alpha1.KeycloakRealm{}
 
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		err := GetNamespacedKeycloakRealm(namespace, testKeycloakRealmCRName, keycloakRealmCR)
 		if err != nil {
 			return err
 		}
 
 		if !keycloakRealmCR.Status.Ready {
-			t.Logf("Condition RealmReady not yet successful for %s", keycloakRealmCR.Name)
+			GinkgoWriter.Printf("Condition RealmReady not yet successful for %s", keycloakRealmCR.Name)
 
 			keycloakRealmCRParsed, err := json.Marshal(keycloakRealmCR)
 			if err != nil {
@@ -144,22 +147,22 @@ func WaitForRealmToBeReady(t *testing.T, namespace string) error {
 			return errors.Errorf("keycloakRealm is not ready \nCurrent CR value: %s", string(keycloakRealmCRParsed))
 		}
 
-		t.Logf("Condition RealmReady successful %s", keycloakRealmCR.Name)
+		GinkgoWriter.Printf("Condition RealmReady successful %s", keycloakRealmCR.Name)
 		return nil
 	})
 }
 
-func WaitForClientToBeReady(t *testing.T, namespace string, name string) error {
+func WaitForClientToBeReady(namespace string, name string) error {
 	keycloakClientCR := &keycloakv1alpha1.KeycloakClient{}
 
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		err := GetNamespacedKeycloakClient(namespace, name, keycloakClientCR)
 		if err != nil {
 			return err
 		}
 
 		if !keycloakClientCR.Status.Ready {
-			t.Logf("Condition KeycloakClientReady not yet successful for %s", keycloakClientCR.Name)
+			GinkgoWriter.Printf("Condition KeycloakClientReady not yet successful for %s", keycloakClientCR.Name)
 			keycloakRealmCRParsed, err := json.Marshal(keycloakClientCR)
 			if err != nil {
 				return err
@@ -168,22 +171,22 @@ func WaitForClientToBeReady(t *testing.T, namespace string, name string) error {
 			return errors.Errorf("keycloakClient is not ready \nCurrent CR value: %s", string(keycloakRealmCRParsed))
 		}
 
-		t.Logf("Condition KeycloakClientReady successful for %s", keycloakClientCR.Name)
+		GinkgoWriter.Printf("Condition KeycloakClientReady successful for %s", keycloakClientCR.Name)
 		return nil
 	})
 }
 
-func WaitForClientToBeFailing(t *testing.T, namespace string, name string) error {
+func WaitForClientToBeFailing(namespace string, name string) error {
 	keycloakClientCR := &keycloakv1alpha1.KeycloakClient{}
 
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		err := GetNamespacedKeycloakClient(namespace, name, keycloakClientCR)
 		if err != nil {
 			return err
 		}
 
 		if keycloakClientCR.Status.Phase != keycloakv1alpha1.PhaseFailing {
-			t.Logf("Condition KeycloakClientFailing not yet successful for %s", keycloakClientCR.Name)
+			GinkgoWriter.Printf("Condition KeycloakClientFailing not yet successful for %s", keycloakClientCR.Name)
 			keycloakRealmCRParsed, err := json.Marshal(keycloakClientCR)
 
 			if err != nil {
@@ -193,13 +196,13 @@ func WaitForClientToBeFailing(t *testing.T, namespace string, name string) error
 			return errors.Errorf("keycloakClient is not failing \nCurrent CR value: %s", string(keycloakRealmCRParsed))
 		}
 
-		t.Logf("Condition KeycloakClientFailing successful for %s", keycloakClientCR.Name)
+		GinkgoWriter.Printf("Condition KeycloakClientFailing successful for %s", keycloakClientCR.Name)
 		return nil
 	})
 }
 
-func WaitForResponse(t *testing.T, url string, condition ResponseCondition) error {
-	return WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
+func WaitForResponse(url string, condition ResponseCondition) error {
+	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
 		response, err := http.Get(url) //nolint
 		if err != nil {
 			return err
@@ -215,8 +218,8 @@ func WaitForResponse(t *testing.T, url string, condition ResponseCondition) erro
 	})
 }
 
-func WaitForSuccessResponseToContain(t *testing.T, url string, expectedString string) error {
-	return WaitForResponse(t, url, func(response *http.Response) error {
+func WaitForSuccessResponseToContain(url string, expectedString string) error {
+	return WaitForResponse(url, func(response *http.Response) error {
 		if response.StatusCode != 200 {
 			return errors.Errorf("invalid response from url %s (%v)", url, response.Status)
 		}
@@ -227,14 +230,14 @@ func WaitForSuccessResponseToContain(t *testing.T, url string, expectedString st
 		}
 		responseString := string(responseData)
 
-		assert.Contains(t, responseString, expectedString)
+		Expect(responseString).To(ContainSubstring(expectedString))
 
 		return nil
 	})
 }
 
-func WaitForSuccessResponse(t *testing.T, url string) error {
-	return WaitForResponse(t, url, func(response *http.Response) error {
+func WaitForSuccessResponse(url string) error {
+	return WaitForResponse(url, func(response *http.Response) error {
 		if response.StatusCode != 200 {
 			return errors.Errorf("invalid response from url %s (%v)", url, response.Status)
 		}
@@ -244,7 +247,10 @@ func WaitForSuccessResponse(t *testing.T, url string) error {
 
 func CreateKeycloak(kc keycloakv1alpha1.Keycloak) error {
 	result := keycloakv1alpha1.Keycloak{}
-	return getClient().RESTClient().Post().Namespace(kc.Namespace).Resource(kc.Kind).Body(kc).Do(context.Background()).Into(&result)
+	body, _ := json.Marshal(kc)
+	fmt.Printf("%s \n", body)
+
+	return getClient().RESTClient().Post().Namespace(kc.Namespace).Resource("keycloak").Body(&kc).Do(context.Background()).Into(&result)
 }
 func CreateKeycloakRealm(kcr keycloakv1alpha1.KeycloakRealm) error {
 	result := keycloakv1alpha1.KeycloakRealm{}

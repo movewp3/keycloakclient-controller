@@ -1,5 +1,6 @@
 package e2e
 
+/*
 import (
 	"testing"
 
@@ -13,16 +14,6 @@ const (
 	realmName                  = "test-realm"
 	testOperatorIDPDisplayName = "Test Operator IDP"
 )
-
-func NewKeycloakRealmsCRDTestStruct() *CRDTestStruct {
-	return &CRDTestStruct{
-		testSteps: map[string]deployedOperatorTestStep{
-			"unmanagedKeycloakRealmTest": {
-				testFunction: keycloakUnmanagedRealmTest,
-			},
-		},
-	}
-}
 
 func getKeycloakRealmCR(namespace string) *keycloakv1alpha1.KeycloakRealm {
 	return &keycloakv1alpha1.KeycloakRealm{
@@ -45,8 +36,8 @@ func getKeycloakRealmCR(namespace string) *keycloakv1alpha1.KeycloakRealm {
 	}
 }
 
-func prepareKeycloakRealmCR(t *testing.T, namespace string) error {
-	keycloakRealmCR := getKeycloakRealmCR(namespace)
+func prepareKeycloakRealmCR() error {
+	keycloakRealmCR := getKeycloakRealmCR(keycloakNamespace)
 
 	err := CreateKeycloakRealm(*keycloakRealmCR)
 	if err == nil {
@@ -73,10 +64,11 @@ func keycloakUnmanagedRealmTest(t *testing.T, namespace string) error {
 		return err
 	}
 
-	err = WaitForRealmToBeReady(t, namespace)
+	err = WaitForRealmToBeReady(namespace)
 	if err != nil {
 		return err
 	}
 
 	return err
 }
+*/

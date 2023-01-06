@@ -2,32 +2,59 @@ package e2e
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
+	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	v1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 
+	"github.com/pkg/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
-	v1 "k8s.io/api/core/v1"
-
-	"github.com/pkg/errors"
-
-	"github.com/stretchr/testify/assert"
-
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
-func NewExternalKeycloaksCRDTestStruct() *CRDTestStruct {
-	return &CRDTestStruct{
-		prepareEnvironmentSteps: []environmentInitializationStep{
-			prepareExternalKeycloaksCR,
-		},
-		testSteps: map[string]deployedOperatorTestStep{
-			"keycloakExternalDeploymentTest": {testFunction: keycloakExternalDeploymentTest},
-		},
-	}
-}
+var _ = Describe("Keycloak", func() {
+	fmt.Println("start Keycloak")
+
+	BeforeEach(func() {
+		err := prepareExternalKeycloaksCR()
+		Expect(err).To(BeNil())
+	})
+	It("keycloak cr is not nil", func() {
+		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(keycloakCR).NotTo(BeNil())
+	})
+	It("keycloak status is not nil", func() {
+		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(keycloakCR.Status).NotTo(BeNil())
+	})
+	It("keycloak external url is set", func() {
+		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(keycloakCR.Status.ExternalURL).NotTo(BeEmpty())
+	})
+
+	It("keycloak cr is not nil2", func() {
+
+		err := WaitForCondition(getClient(), func(c kubernetes.Interface) error {
+			sts, err := getClient().AppsV1().StatefulSets(keycloakNamespace).List(context.TODO(), metav1.ListOptions{})
+
+			if err != nil {
+				return errors.Errorf("list StatefulSet failed, ignoring for %v: %v", pollRetryInterval, err)
+			}
+			if len(sts.Items) == 1 {
+				return nil
+			}
+			return errors.Errorf("should find one Statefulset, as the cluster has been prepared with a keycloak installation")
+		})
+		Expect(err).To(BeNil())
+
+	})
+
+})
 
 func getKeycloakCR(namespace string) *keycloakv1alpha1.Keycloak {
 	return &keycloakv1alpha1.Keycloak{
@@ -87,7 +114,7 @@ func prepareUnmanagedKeycloaksCR(t *testing.T, namespace string) error {
 		return err
 	}
 
-	err = WaitForKeycloakToBeReady(t, namespace, testKeycloakCRName)
+	err = WaitForKeycloakToBeReady(namespace, testKeycloakCRName)
 	if err != nil {
 		return err
 	}
@@ -95,10 +122,11 @@ func prepareUnmanagedKeycloaksCR(t *testing.T, namespace string) error {
 	return err
 }
 
-func prepareExternalKeycloaksCR(t *testing.T, namespace string) error {
+func prepareExternalKeycloaksCR() error {
 	keycloakURL := "http://keycloak.local:80"
 
-	secret, err := getExternalKeycloakSecret(namespace)
+	secret, err := getExternalKeycloakSecret(keycloakNamespace)
+	GinkgoWriter.Printf("err: %s\n", err.Error())
 	if err != nil && !apiErrors.IsNotFound(err) {
 		return err
 	}
@@ -107,7 +135,7 @@ func prepareExternalKeycloaksCR(t *testing.T, namespace string) error {
 		secret = &v1.Secret{
 			ObjectMeta: metav1.ObjectMeta{
 				Name:      "credential-" + testKeycloakCRName,
-				Namespace: namespace,
+				Namespace: keycloakNamespace,
 			},
 			StringData: map[string]string{
 				"user":     "admin",
@@ -121,36 +149,22 @@ func prepareExternalKeycloaksCR(t *testing.T, namespace string) error {
 			return err
 		}
 	}
+	GinkgoWriter.Printf("secret created\n")
 
-	externalKeycloakCR := getExternalKeycloakCR(namespace, keycloakURL)
+	externalKeycloakCR := getExternalKeycloakCR(keycloakNamespace, keycloakURL)
+	GinkgoWriter.Printf("getExternalKeycloakCR\n")
 
 	err = CreateKeycloak(*externalKeycloakCR)
+
+	Expect("err").To(BeNil())
 	if err != nil && !apiErrors.IsAlreadyExists(err) {
 		return err
 	}
 
-	err = WaitForKeycloakToBeReady(t, namespace, testKeycloakCRName)
+	err = WaitForKeycloakToBeReady(keycloakNamespace, testKeycloakCRName)
 	if err != nil {
 		return err
 	}
 
-	return err
-}
-
-func keycloakExternalDeploymentTest(t *testing.T, namespace string) error {
-	keycloakCR := getDeployedKeycloakCR(namespace)
-	assert.NotEmpty(t, keycloakCR.Status.ExternalURL)
-
-	err := WaitForCondition(t, getClient(), func(t *testing.T, c kubernetes.Interface) error {
-		sts, err := getClient().AppsV1().StatefulSets(namespace).List(context.TODO(), metav1.ListOptions{})
-
-		if err != nil {
-			return errors.Errorf("list StatefulSet failed, ignoring for %v: %v", pollRetryInterval, err)
-		}
-		if len(sts.Items) == 1 {
-			return nil
-		}
-		return errors.Errorf("should find one Statefulset, as the cluster has been prepared with a keycloak installation")
-	})
 	return err
 }
