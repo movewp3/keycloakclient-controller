@@ -95,6 +95,20 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="..."
 
+.PHONY: clientgen
+
+clientgen:
+	@echo "--> Running code-generator to generate clients"
+	# prepare tool code-generator
+	@mkdir -p ./tmp/code-generator
+	@git clone https://github.com/kubernetes/code-generator.git --branch v0.25.5 --single-branch  ./tmp/code-generator
+	# generate client
+	./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/christianwoehrle/keycloakclient-controller/pkg/client github.com/christianwoehrle/keycloakclient-controller/api keycloak:v1alpha1 --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
+	# check generated client at ./pkg/client
+	@cp -r ./tmp/github.com/christianwoehrle/keycloakclient-operator/pkg/client/* ./pkg/client/
+	#@rm -rf ./tmp/github.com ./tmp/code-generator
+
+
 .PHONY: fmt
 fmt: ## Run go fmt against code.
 	go fmt ./...
