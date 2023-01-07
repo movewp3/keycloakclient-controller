@@ -11,6 +11,10 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned"
+
 	v1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -22,11 +26,10 @@ import (
 
 	"github.com/pkg/errors"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	//v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-	dynclient "sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 func getClient() *kubernetes.Clientset {
@@ -45,6 +48,30 @@ func getClient() *kubernetes.Clientset {
 
 	Expect(err).NotTo(HaveOccurred())
 	clientset, err := kubernetes.NewForConfig(config)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	GinkgoWriter.Printf("getClient return\n")
+	return clientset
+}
+
+func getKeycloakApiClient() *versioned.Clientset {
+	GinkgoWriter.Printf("getKeycloakApiClient \n")
+	kubeconfig := os.Getenv("KUBECONFIG")
+	if kubeconfig == "" {
+		kubeconfig = filepath.Join(
+			os.Getenv("HOME"), ".kube", "config",
+		)
+
+	}
+	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	Expect(err).NotTo(HaveOccurred())
+	clientset, err := versioned.NewForConfig(config)
 
 	if err != nil {
 		log.Fatal(err)
@@ -104,18 +131,16 @@ func WaitForStatefulSetReplicasReady(c kubernetes.Interface, statefulSetName, ns
 }
 
 func WaitForKeycloakToBeReady(namespace string, name string) error {
-	keycloakCR := &keycloakv1alpha1.Keycloak{}
-
 	return WaitForCondition(getClient(), func(c kubernetes.Interface) error {
-		err := GetNamespacedKeycloak(namespace, name, keycloakCR)
+		keycloak, err := GetNamespacedKeycloak(namespace, name)
 		if err != nil {
 			return err
 		}
 
-		if !keycloakCR.Status.Ready {
+		if !keycloak.Status.Ready {
 			GinkgoWriter.Printf("Condition KeycloakReady not yet successful for %s", keycloakCR.Name)
 
-			keycloakCRParsed, err := json.Marshal(keycloakCR)
+			keycloakCRParsed, err := json.Marshal(keycloak)
 			if err != nil {
 				return err
 			}
@@ -245,36 +270,35 @@ func WaitForSuccessResponse(url string) error {
 	})
 }
 
-func CreateKeycloak(kc keycloakv1alpha1.Keycloak) error {
-	result := keycloakv1alpha1.Keycloak{}
-	body, _ := json.Marshal(kc)
-	fmt.Printf("%s \n", body)
-
-	return getClient().RESTClient().Post().Namespace(kc.Namespace).Resource("keycloak").Body(&kc).Do(context.Background()).Into(&result)
+func CreateKeycloak(kc *v1alpha1.Keycloak) error {
+	_, err := getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(keycloakNamespace).Create(context.Background(), kc, metav1.CreateOptions{})
+	return err
 }
 func CreateKeycloakRealm(kcr keycloakv1alpha1.KeycloakRealm) error {
 	result := keycloakv1alpha1.KeycloakRealm{}
-	return getClient().RESTClient().Post().Namespace(kcr.Namespace).Resource(kcr.Kind).Body(kcr).Do(context.Background()).Into(&result)
+	return getClient().RESTClient().Post().Namespace(kcr.Namespace).Resource("keycloaks").Body(kcr).Do(context.Background()).Into(&result)
 }
 func CreateKeycloakClient(kcc keycloakv1alpha1.KeycloakClient) error {
 	result := keycloakv1alpha1.KeycloakClient{}
 	return getClient().RESTClient().Post().Namespace(kcc.Namespace).Resource(kcc.Kind).Body(kcc).Do(context.Background()).Into(&result)
 }
-func CreateSecret(secret v1.Secret) error {
-	result := v1.Secret{}
-	return getClient().RESTClient().Post().Namespace(secret.Namespace).Resource(secret.Kind).Body(secret).Do(context.Background()).Into(&result)
+func DeleteSecret(name string) error {
+	return getClient().CoreV1().Secrets(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
+}
+func CreateSecret(secret *v1.Secret) error {
+	_, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	return err
 }
 
-func GetKeycloak(key dynclient.ObjectKey, kc keycloakv1alpha1.Keycloak) error {
-	result := keycloakv1alpha1.Keycloak{}
-	return getClient().RESTClient().Post().Namespace(kc.Namespace).Resource(kc.Kind).Body(kc).Do(context.Background()).Into(&result)
+func GetKeycloak(name string) (*keycloakv1alpha1.Keycloak, error) {
+	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(keycloakNamespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
 func GetNamespacedSecret(namespace string, objectName string, outputObject *v1.Secret) error {
 	return getClient().RESTClient().Get().Namespace(namespace).Resource("Secret").Name(objectName).Do(context.Background()).Into(outputObject)
 }
-func GetNamespacedKeycloak(namespace string, objectName string, outputObject *keycloakv1alpha1.Keycloak) error {
-	return getClient().RESTClient().Get().Namespace(namespace).Resource("Keycloak").Name(objectName).Do(context.Background()).Into(outputObject)
+func GetNamespacedKeycloak(namespace string, name string) (*keycloakv1alpha1.Keycloak, error) {
+	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 func GetNamespacedKeycloakRealm(namespace string, objectName string, outputObject *keycloakv1alpha1.KeycloakRealm) error {
 	return getClient().RESTClient().Get().Namespace(namespace).Resource("KeycloakRealm").Name(objectName).Do(context.Background()).Into(outputObject)
@@ -287,8 +311,8 @@ func GetNamespacedKeycloakClient(namespace string, objectName string, outputObje
 func UpdateKeycloakClient(obj runtime.Object) error {
 	return getClient().RESTClient().Post().Resource("KeycloakClient").Body(obj).Do(context.Background()).Into(obj)
 }
-func DeleteKeycloak(kc keycloakv1alpha1.KeycloakClient) error {
-	return getClient().RESTClient().Delete().Namespace(kc.Namespace).Resource(kc.Kind).Body(kc).Do(context.Background()).Into(&kc)
+func DeleteKeycloak(name string) error {
+	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
 }
 
 func DeleteKeycloakRealm(kcr keycloakv1alpha1.KeycloakRealm) error {

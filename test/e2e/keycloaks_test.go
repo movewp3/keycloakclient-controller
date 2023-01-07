@@ -3,7 +3,6 @@ package e2e
 import (
 	"context"
 	"fmt"
-	"testing"
 
 	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
@@ -24,16 +23,23 @@ var _ = Describe("Keycloak", func() {
 		err := prepareExternalKeycloaksCR()
 		Expect(err).To(BeNil())
 	})
+	AfterEach(func() {
+		err := tearDownExternalKeycloaksCR()
+		Expect(err).To(BeNil())
+	})
 	It("keycloak cr is not nil", func() {
-		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(err).To(BeNil())
 		Expect(keycloakCR).NotTo(BeNil())
 	})
 	It("keycloak status is not nil", func() {
-		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(err).To(BeNil())
 		Expect(keycloakCR.Status).NotTo(BeNil())
 	})
 	It("keycloak external url is set", func() {
-		keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+		Expect(err).To(BeNil())
 		Expect(keycloakCR.Status.ExternalURL).NotTo(BeEmpty())
 	})
 
@@ -83,33 +89,17 @@ func getExternalKeycloakCR(namespace string, url string) *keycloakv1alpha1.Keycl
 	return keycloak
 }
 
-func getDeployedKeycloakCR(namespace string) keycloakv1alpha1.Keycloak {
-	keycloakCR := keycloakv1alpha1.Keycloak{}
-	_ = GetNamespacedKeycloak(namespace, testKeycloakCRName, &keycloakCR)
-	return keycloakCR
+func getDeployedKeycloakCR(namespace string) (*keycloakv1alpha1.Keycloak, error) {
+	return GetNamespacedKeycloak(namespace, testKeycloakCRName)
 }
 
 func getExternalKeycloakSecret(namespace string) (*v1.Secret, error) {
-	secret, err := getClient().CoreV1().Secrets(namespace).Get(context.TODO(), "credential-"+testKeycloakCRName, metav1.GetOptions{})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return &v1.Secret{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "credential-" + testKeycloakCRName,
-			Namespace: namespace,
-		},
-		Data:       secret.Data,
-		StringData: secret.StringData,
-		Type:       secret.Type,
-	}, nil
+	return getClient().CoreV1().Secrets(namespace).Get(context.TODO(), "credential-"+testKeycloakCRName, metav1.GetOptions{})
 }
 
-func prepareUnmanagedKeycloaksCR(t *testing.T, namespace string) error {
+func prepareUnmanagedKeycloaksCR(namespace string) error {
 	keycloakCR := getUnmanagedKeycloakCR(namespace)
-	err := CreateKeycloak(*keycloakCR)
+	err := CreateKeycloak(keycloakCR)
 	if err != nil {
 		return err
 	}
@@ -126,35 +116,73 @@ func prepareExternalKeycloaksCR() error {
 	keycloakURL := "http://keycloak.local:80"
 
 	secret, err := getExternalKeycloakSecret(keycloakNamespace)
-	GinkgoWriter.Printf("err: %s\n", err.Error())
+	if err != nil && !apiErrors.IsNotFound(err) {
+		GinkgoWriter.Printf("err: %s\n", err.Error())
+		return err
+	}
+	if err == nil {
+		err = DeleteSecret("credential-" + testKeycloakCRName)
+		Expect(err).To(BeNil())
+	}
+	// noe setup secret
+	secret = &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "credential-" + testKeycloakCRName,
+			Namespace: keycloakNamespace,
+		},
+		StringData: map[string]string{
+			"user":     "admin",
+			"password": "admin",
+		},
+		Type: v1.SecretTypeOpaque,
+	}
+
+	err = CreateSecret(secret)
+	Expect(err).To(BeNil())
+	GinkgoWriter.Printf("secret created\n")
+
+	keycloak, err := GetKeycloak(testKeycloakCRName)
 	if err != nil && !apiErrors.IsNotFound(err) {
 		return err
 	}
-
-	if err != nil && !apiErrors.IsNotFound(err) {
-		secret = &v1.Secret{
-			ObjectMeta: metav1.ObjectMeta{
-				Name:      "credential-" + testKeycloakCRName,
-				Namespace: keycloakNamespace,
-			},
-			StringData: map[string]string{
-				"user":     "admin",
-				"password": "admin",
-			},
-			Type: v1.SecretTypeOpaque,
-		}
-
-		err = CreateSecret(*secret)
-		if err != nil {
-			return err
-		}
+	if err == nil {
+		err = DeleteKeycloak(keycloak.Name)
+		Expect(err).To(BeNil())
 	}
-	GinkgoWriter.Printf("secret created\n")
+
+	externalKeycloakCR := getExternalKeycloakCR(keycloakNamespace, keycloakURL)
+
+	err = CreateKeycloak(externalKeycloakCR)
+
+	Expect(err).To(BeNil())
+
+	err = WaitForKeycloakToBeReady(keycloakNamespace, testKeycloakCRName)
+	if err != nil {
+		return err
+	}
+
+	return err
+}
+func tearDownExternalKeycloaksCR() error {
+	keycloakURL := "http://keycloak.local:80"
+
+	_, err := getExternalKeycloakSecret(keycloakNamespace)
+	GinkgoWriter.Printf("err: %s\n", err.Error())
+	if err != nil && !apiErrors.IsNotFound(err) {
+		GinkgoWriter.Printf("Secret not found in tearDownExternalKeycloaksCR: %s\n", err.Error())
+	}
+
+	err = DeleteSecret("credential-" + testKeycloakCRName)
+	if err != nil {
+		return err
+	}
+
+	GinkgoWriter.Printf("secret deleted\n")
 
 	externalKeycloakCR := getExternalKeycloakCR(keycloakNamespace, keycloakURL)
 	GinkgoWriter.Printf("getExternalKeycloakCR\n")
 
-	err = CreateKeycloak(*externalKeycloakCR)
+	err = DeleteKeycloak(externalKeycloakCR.Name)
 
 	Expect("err").To(BeNil())
 	if err != nil && !apiErrors.IsAlreadyExists(err) {
