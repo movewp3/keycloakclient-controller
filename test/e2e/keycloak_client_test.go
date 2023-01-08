@@ -1,7 +1,7 @@
 package e2e
 
-/*
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"sort"
@@ -15,8 +15,8 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-			. "github.com/onsi/ginkgo/v2"
-			. "github.com/onsi/gomega"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
 )
 
 const (
@@ -28,17 +28,25 @@ var ErrDeprecatedClientSecretFound = errors.New("deprecated client secret found"
 
 var _ = Describe("KeycloakClient", func() {
 
-	fmt.Println("start")
 	BeforeEach(func() {
-		prepareExternalKeycloaksCR()
+		err := prepareExternalKeycloaksCR()
+		Expect(err).To(BeNil())
 		prepareKeycloakRealmCR()
+		tearDownKeycloakClients()
+	})
+	AfterEach(func() {
+		err := tearDownExternalKeycloaksRealmCR()
+		Expect(err).To(BeNil())
+		err = tearDownExternalKeycloaksCR()
+		Expect(err).To(BeNil())
+		tearDownKeycloakClients()
 	})
 
 	Describe("keycloakClientBasicTest", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientCR()
 		})
-		FIt("test basic client", func() {
+		It("test basic client", func() {
 			err := WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
 			Expect(err).To(BeNil())
 		})
@@ -279,22 +287,22 @@ func getKeycloakClientWithServiceAccount() *keycloakv1alpha1.KeycloakClient {
 
 func prepareKeycloakClientCR() error {
 	keycloakClientCR := getKeycloakClientCR()
-	return CreateKeycloakClient(*keycloakClientCR)
+	return CreateKeycloakClient(keycloakClientCR)
 }
 
 func prepareExternalKeycloakClientCR() error {
 	keycloakClientCR := getKeycloakClientCR()
-	return CreateKeycloakClient(*keycloakClientCR)
+	return CreateKeycloakClient(keycloakClientCR)
 }
 
 func prepareKeycloakClientAuthZCR() error {
 	keycloakClientCR := getKeycloakClientAuthZCR()
-	return CreateKeycloakClient(*keycloakClientCR)
+	return CreateKeycloakClient(keycloakClientCR)
 }
 
 func prepareKeycloakClientWithServiceAccount() error {
 	keycloakClientCR := getKeycloakClientWithServiceAccount()
-	return CreateKeycloakClient(*keycloakClientCR)
+	return CreateKeycloakClient(keycloakClientCR)
 }
 
 func keycloakClientBasicTest() error {
@@ -314,13 +322,13 @@ func keycloakClientDeprecatedClientSecretTest() error {
 	secret := model.DeprecatedClientSecret(client)
 
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
-	err := CreateSecret(*secret)
+	err := CreateSecret(secret)
 	if err != nil {
 		return err
 	}
 
 	// create client
-	err = CreateKeycloakClient(*client)
+	err = CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -350,7 +358,7 @@ func keycloakClientRolesTest() error {
 	client := getKeycloakClientCR()
 
 	client.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{Name: "a"}, {Name: "b"}, {Name: "c"}}
-	err := CreateKeycloakClient(*client)
+	err := CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -360,8 +368,8 @@ func keycloakClientRolesTest() error {
 	}
 
 	// update client: delete/rename/leave/add role
-	keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
-	authenticatedClient, err := MakeAuthenticatedClient(keycloakCR)
+	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+	authenticatedClient, err := MakeAuthenticatedClient(*keycloakCR)
 	if err != nil {
 		return err
 	}
@@ -369,7 +377,7 @@ func keycloakClientRolesTest() error {
 	if err != nil {
 		return err
 	}
-	err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName, client)
+	_, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
@@ -379,7 +387,7 @@ func keycloakClientRolesTest() error {
 		return err
 	}
 	// check role presence directly as a "ready" CR might just be stale
-	err = waitForClientRoles(keycloakCR, client, client.Spec.Roles)
+	err = waitForClientRoles(*keycloakCR, client, client.Spec.Roles)
 	if err != nil {
 		return err
 	}
@@ -391,7 +399,7 @@ func keycloakClientDefaultRolesTest() error {
 	client := getKeycloakClientCR()
 	client.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	client.Spec.Client.DefaultRoles = []string{"a", "b"}
-	err := CreateKeycloakClient(*client)
+	err := CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -400,19 +408,19 @@ func keycloakClientDefaultRolesTest() error {
 		return err
 	}
 
-	keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
 	if err != nil {
 		return err
 	}
 
 	// are roles "a" and "b" the ONLY default roles for this client?
-	err = waitForDefaultClientRoles(keycloakCR, client, "a", "b")
+	err = waitForDefaultClientRoles(*keycloakCR, client, "a", "b")
 	if err != nil {
 		return err
 	}
 
 	// update default client roles
-	err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName, client)
+	_, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
@@ -423,7 +431,7 @@ func keycloakClientDefaultRolesTest() error {
 	}
 
 	// are roles "b" and "c" the ONLY default roles for this client?
-	err = waitForDefaultClientRoles(keycloakCR, client, "b", "c")
+	err = waitForDefaultClientRoles(*keycloakCR, client, "b", "c")
 	if err != nil {
 		return err
 	}
@@ -535,7 +543,7 @@ func prepareKeycloakClientWithRolesCR() error {
 	keycloakClientCR.Spec.Client.ClientID = secondClientName
 	keycloakClientCR.Spec.Client.Name = secondClientName
 	keycloakClientCR.Spec.Client.WebOrigins = []string{"https://operator-test-second.url"}
-	return CreateKeycloakClient(*keycloakClientCR)
+	return CreateKeycloakClient(keycloakClientCR)
 }
 
 func getKeycloakClientWithScopeMappingsCR(authenticatedClient common.KeycloakInterface,
@@ -583,8 +591,8 @@ func keycloakClientScopeMappingsTest() error {
 	if err != nil {
 		return err
 	}
-	keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
-	authenticatedClient, err := MakeAuthenticatedClient(keycloakCR)
+	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+	authenticatedClient, err := MakeAuthenticatedClient(*keycloakCR)
 	if err != nil {
 		return err
 	}
@@ -597,7 +605,7 @@ func keycloakClientScopeMappingsTest() error {
 	if err != nil {
 		return err
 	}
-	err = CreateKeycloakClient(*client)
+	err = CreateKeycloakClient(client)
 	fmt.Println(err)
 
 	if err != nil {
@@ -610,8 +618,8 @@ func keycloakClientScopeMappingsTest() error {
 	}
 
 	// add non-existent roles
-	var retrievedClient keycloakv1alpha1.KeycloakClient
-	err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName, &retrievedClient)
+	var retrievedClient *keycloakv1alpha1.KeycloakClient
+	retrievedClient, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
@@ -627,11 +635,11 @@ func keycloakClientScopeMappingsTest() error {
 	}
 	retrievedClient.Spec.ScopeMappings = mappings
 	GinkgoWriter.Print("update %s with nonexisting role", testKeycloakClientCRName)
-	err = UpdateKeycloakClient(&retrievedClient)
+	err = UpdateKeycloakClient(retrievedClient)
 	if err != nil {
 		return err
 	}
-	GinkgoWriter.Print("wait for failiing keycloakclient %s with nonexisting role", testKeycloakClientCRName)
+	GinkgoWriter.Print("wait for failing keycloakclient %s with nonexisting role", testKeycloakClientCRName)
 	err = WaitForClientToBeFailing(keycloakNamespace, testKeycloakClientCRName)
 
 	if err != nil {
@@ -639,7 +647,7 @@ func keycloakClientScopeMappingsTest() error {
 	}
 
 	// update client: delete/leave/create mappings
-	err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName, &retrievedClient)
+	retrievedClient, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
@@ -649,7 +657,7 @@ func keycloakClientScopeMappingsTest() error {
 	}
 	retrievedClient.Spec.ScopeMappings = mappings
 
-	err = UpdateKeycloakClient(&retrievedClient)
+	err = UpdateKeycloakClient(retrievedClient)
 	if err != nil {
 		return err
 	}
@@ -701,26 +709,26 @@ func keycloakClientServiceAccountRealmRolesTest() error {
 		return err
 	}
 
-	keycloakCR := getDeployedKeycloakCR(keycloakNamespace)
+	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
 
 	// assert roles
-	assertServiceAccountRoles(keycloakCR, testKeycloakClientCRName, []string{"realmRoleA", "realmRoleB"}, map[string][]string{secondClientName: {"a", "b"}})
+	assertServiceAccountRoles(*keycloakCR, testKeycloakClientCRName, []string{"realmRoleA", "realmRoleB"}, map[string][]string{secondClientName: {"a", "b"}})
 
 	// remove one of the roles
-	var retrievedClient keycloakv1alpha1.KeycloakClient
-	err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName, &retrievedClient)
+	var retrievedClient *keycloakv1alpha1.KeycloakClient
+	retrievedClient, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
 	retrievedClient.Spec.ServiceAccountRealmRoles = []string{"realmRoleB"}
 	retrievedClient.Spec.ServiceAccountClientRoles = map[string][]string{secondClientName: {"b"}}
-	err = UpdateKeycloakClient(&retrievedClient)
+	err = UpdateKeycloakClient(retrievedClient)
 	if err != nil {
 		return err
 	}
 
 	// assert roles were removed
-	assertServiceAccountRoles(keycloakCR, testKeycloakClientCRName, []string{"realmRoleB"}, map[string][]string{secondClientName: {"b"}})
+	assertServiceAccountRoles(*keycloakCR, testKeycloakClientCRName, []string{"realmRoleB"}, map[string][]string{secondClientName: {"b"}})
 
 	return nil
 }
@@ -779,4 +787,19 @@ func assertServiceAccountRoles(keycloakCR keycloakv1alpha1.Keycloak, clientID st
 	})
 	Expect(err).To(BeNil())
 }
-*/
+
+func tearDownKeycloakClients() error {
+	keycloakClientList, err := getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(keycloakNamespace).List(context.Background(), metav1.ListOptions{})
+
+	if err != nil && !apierrors.IsNotFound(err) {
+		return err
+	}
+	for _, keycloakClient := range (*keycloakClientList).Items {
+		name := keycloakClient.Name
+		err = getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}

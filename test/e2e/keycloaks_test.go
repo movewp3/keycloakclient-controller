@@ -36,6 +36,8 @@ var _ = Describe("Keycloak", func() {
 		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
 		Expect(err).To(BeNil())
 		Expect(keycloakCR.Status).NotTo(BeNil())
+		Expect(keycloakCR.Status.Ready).To(BeTrue())
+		Expect(keycloakCR.Status.Phase).To(Equal(keycloakv1alpha1.PhaseReconciling))
 	})
 	It("keycloak external url is set", func() {
 		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
@@ -113,7 +115,7 @@ func prepareUnmanagedKeycloaksCR(namespace string) error {
 }
 
 func prepareExternalKeycloaksCR() error {
-	keycloakURL := "http://keycloak.local:80"
+	keycloakURL := "http://keycloak.local:8082"
 
 	secret, err := getExternalKeycloakSecret(keycloakNamespace)
 	if err != nil && !apiErrors.IsNotFound(err) {
@@ -164,10 +166,9 @@ func prepareExternalKeycloaksCR() error {
 	return err
 }
 func tearDownExternalKeycloaksCR() error {
-	keycloakURL := "http://keycloak.local:80"
+	keycloakURL := "http://keycloak.local:8082"
 
 	_, err := getExternalKeycloakSecret(keycloakNamespace)
-	GinkgoWriter.Printf("err: %s\n", err.Error())
 	if err != nil && !apiErrors.IsNotFound(err) {
 		GinkgoWriter.Printf("Secret not found in tearDownExternalKeycloaksCR: %s\n", err.Error())
 	}
@@ -184,15 +185,6 @@ func tearDownExternalKeycloaksCR() error {
 
 	err = DeleteKeycloak(externalKeycloakCR.Name)
 
-	Expect("err").To(BeNil())
-	if err != nil && !apiErrors.IsAlreadyExists(err) {
-		return err
-	}
-
-	err = WaitForKeycloakToBeReady(keycloakNamespace, testKeycloakCRName)
-	if err != nil {
-		return err
-	}
-
-	return err
+	Expect(err).To(BeNil())
+	return nil
 }
