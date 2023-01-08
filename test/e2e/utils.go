@@ -28,7 +28,6 @@ import (
 
 	//v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -284,8 +283,10 @@ func GetNamespacedKeycloakClient(namespace string, objectName string) (*keycloak
 	return getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(namespace).Get(context.Background(), objectName, metav1.GetOptions{})
 }
 
-func UpdateKeycloakClient(obj runtime.Object) error {
-	return getClient().RESTClient().Post().Resource("KeycloakClient").Body(obj).Do(context.Background()).Into(obj)
+func UpdateKeycloakClient(namespace string, client *keycloakv1alpha1.KeycloakClient) (*keycloakv1alpha1.KeycloakClient, error) {
+	//return getKeycloakApiClient().RESTClient().Post().Resource("keycloakclients").Body(&obj).Do(context.Background()).Into(obj)
+	return getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(namespace).Update(context.Background(), client, metav1.UpdateOptions{})
+
 }
 func DeleteKeycloak(name string) error {
 	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})

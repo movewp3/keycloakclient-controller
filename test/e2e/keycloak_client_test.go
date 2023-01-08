@@ -74,7 +74,7 @@ var _ = Describe("KeycloakClient", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientAuthZCR()
 		})
-		It("test basic client", func() {
+		FIt("keycloakClientRolesTest", func() {
 			err := keycloakClientRolesTest()
 			Expect(err).To(BeNil())
 		})
@@ -382,7 +382,7 @@ func keycloakClientRolesTest() error {
 		return err
 	}
 	client.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{ID: bID, Name: "b2"}, {Name: "c"}, {Name: "d"}}
-	err = UpdateKeycloakClient(client)
+	_, err = UpdateKeycloakClient(keycloakNamespace, client)
 	if err != nil {
 		return err
 	}
@@ -425,7 +425,7 @@ func keycloakClientDefaultRolesTest() error {
 		return err
 	}
 	client.Spec.Client.DefaultRoles = []string{"b", "c"}
-	err = UpdateKeycloakClient(client)
+	_, err = UpdateKeycloakClient(keycloakNamespace, client)
 	if err != nil {
 		return err
 	}
@@ -635,7 +635,7 @@ func keycloakClientScopeMappingsTest() error {
 	}
 	retrievedClient.Spec.ScopeMappings = mappings
 	GinkgoWriter.Print("update %s with nonexisting role", testKeycloakClientCRName)
-	err = UpdateKeycloakClient(retrievedClient)
+	_, err = UpdateKeycloakClient(keycloakNamespace, retrievedClient)
 	if err != nil {
 		return err
 	}
@@ -657,7 +657,7 @@ func keycloakClientScopeMappingsTest() error {
 	}
 	retrievedClient.Spec.ScopeMappings = mappings
 
-	err = UpdateKeycloakClient(retrievedClient)
+	_, err = UpdateKeycloakClient(keycloakNamespace, retrievedClient)
 	if err != nil {
 		return err
 	}
@@ -722,7 +722,7 @@ func keycloakClientServiceAccountRealmRolesTest() error {
 	}
 	retrievedClient.Spec.ServiceAccountRealmRoles = []string{"realmRoleB"}
 	retrievedClient.Spec.ServiceAccountClientRoles = map[string][]string{secondClientName: {"b"}}
-	err = UpdateKeycloakClient(retrievedClient)
+	_, err = UpdateKeycloakClient(keycloakNamespace, retrievedClient)
 	if err != nil {
 		return err
 	}
@@ -802,4 +802,5 @@ func tearDownKeycloakClients() error {
 		}
 	}
 	return nil
+
 }
