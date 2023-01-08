@@ -21,7 +21,7 @@ import (
 	"context"
 	time "time"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/keycloak/v1alpha1"
+	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	versioned "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/christianwoehrle/keycloakclient-controller/pkg/client/informers/externalversions/internalinterfaces"
 	v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/listers/keycloak/v1alpha1"

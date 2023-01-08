@@ -107,6 +107,8 @@ clientgen:
 	# check generated client at ./pkg/client
 	@cp -r ./tmp/github.com/christianwoehrle/keycloakclient-operator/pkg/client/* ./pkg/client/
 	#@rm -rf ./tmp/github.com ./tmp/code-generator
+	@find pkg/client/ -name "*.go" -exec sed "s:github.com/christianwoehrle/keycloakclient-controller/api/keycloak/v1alpha1:github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1:g" -i {} \;
+
 
 
 .PHONY: fmt

@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+
 	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
@@ -133,8 +135,8 @@ func prepareExternalKeycloaksCR() error {
 			Namespace: keycloakNamespace,
 		},
 		StringData: map[string]string{
-			"user":     "admin",
-			"password": "admin",
+			model.AdminUsernameProperty: "admin",
+			model.AdminPasswordProperty: "admin",
 		},
 		Type: v1.SecretTypeOpaque,
 	}
