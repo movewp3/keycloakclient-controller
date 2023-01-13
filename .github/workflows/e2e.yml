@@ -24,6 +24,8 @@ jobs:
         config/hack/modify_etc_hosts.sh "keycloak.local"
     - name: e2e tests
       run: |
+        echo KUBECONFIG $KUBECONFIG
+        ls ~ -la
         make install
         echo "install finished ====================================================="
         make installKeycloak
