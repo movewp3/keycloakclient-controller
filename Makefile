@@ -131,9 +131,14 @@ verify:
 	go mod verify
 
 
+#.PHONY: test
+#test: manifests generate fmt vet envtest ## Run tests.#
+#	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile=coverage.txt
+
 .PHONY: test
-test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./... -coverprofile=coverage.txt
+test: manifests generate fmt vet envtest ## Run tests.#
+  go test `go list ./... | grep -v e2e`  -coverprofile=coverage.txt
+
 
 ##@ Build
 
@@ -197,7 +202,8 @@ installKeycloak:
 .PHONY: test/e2e
 test/e2e: 
 	@echo Running e2e local tests:
-	@go test test/e2e/...  -coverprofile=coverage.txt
+	@ cd test/e2e
+	@go test .  -coverprofile=coverage.txt
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
