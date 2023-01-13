@@ -46,7 +46,7 @@ var _ = Describe("KeycloakClient", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientCR()
 		})
-		It("test basic client", func() {
+		It("basic client can be created", func() {
 			err := WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
 			Expect(err).To(BeNil())
 		})
@@ -56,7 +56,7 @@ var _ = Describe("KeycloakClient", func() {
 		BeforeEach(func() {
 			prepareExternalKeycloakClientCR()
 		})
-		It("test basic client", func() {
+		It("external client can be created and moves to ready", func() {
 			err := WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
 			Expect(err).To(BeNil())
 		})
@@ -74,7 +74,7 @@ var _ = Describe("KeycloakClient", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientAuthZCR()
 		})
-		FIt("keycloakClientRolesTest", func() {
+		It("keycloakClientRolesTest", func() {
 			err := keycloakClientRolesTest()
 			Expect(err).To(BeNil())
 		})
@@ -287,20 +287,23 @@ func getKeycloakClientWithServiceAccount() *keycloakv1alpha1.KeycloakClient {
 
 func prepareKeycloakClientCR() error {
 	keycloakClientCR := getKeycloakClientCR()
-	return CreateKeycloakClient(keycloakClientCR)
+	_, err := CreateKeycloakClient(keycloakClientCR)
+	return err
 }
 
 func prepareExternalKeycloakClientCR() error {
 	keycloakClientCR := getKeycloakClientCR()
-	return CreateKeycloakClient(keycloakClientCR)
+	_, err := CreateKeycloakClient(keycloakClientCR)
+	return err
 }
 
 func prepareKeycloakClientAuthZCR() error {
 	keycloakClientCR := getKeycloakClientAuthZCR()
-	return CreateKeycloakClient(keycloakClientCR)
+	_, err := CreateKeycloakClient(keycloakClientCR)
+	return err
 }
 
-func prepareKeycloakClientWithServiceAccount() error {
+func prepareKeycloakClientWithServiceAccount() (*keycloakv1alpha1.KeycloakClient, error) {
 	keycloakClientCR := getKeycloakClientWithServiceAccount()
 	return CreateKeycloakClient(keycloakClientCR)
 }
@@ -328,7 +331,7 @@ func keycloakClientDeprecatedClientSecretTest() error {
 	}
 
 	// create client
-	err = CreateKeycloakClient(client)
+	client, err = CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -358,7 +361,7 @@ func keycloakClientRolesTest() error {
 	client := getKeycloakClientCR()
 
 	client.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{Name: "a"}, {Name: "b"}, {Name: "c"}}
-	err := CreateKeycloakClient(client)
+	client, err := CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -377,7 +380,7 @@ func keycloakClientRolesTest() error {
 	if err != nil {
 		return err
 	}
-	_, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
+	client, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
@@ -399,7 +402,7 @@ func keycloakClientDefaultRolesTest() error {
 	client := getKeycloakClientCR()
 	client.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	client.Spec.Client.DefaultRoles = []string{"a", "b"}
-	err := CreateKeycloakClient(client)
+	client, err := CreateKeycloakClient(client)
 	if err != nil {
 		return err
 	}
@@ -420,12 +423,12 @@ func keycloakClientDefaultRolesTest() error {
 	}
 
 	// update default client roles
-	_, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
+	client, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
 	}
 	client.Spec.Client.DefaultRoles = []string{"b", "c"}
-	_, err = UpdateKeycloakClient(keycloakNamespace, client)
+	client, err = UpdateKeycloakClient(keycloakNamespace, client)
 	if err != nil {
 		return err
 	}
@@ -535,7 +538,7 @@ func waitForDefaultClientRoles(keycloakCR keycloakv1alpha1.Keycloak, clientCR *k
 	})
 }
 
-func prepareKeycloakClientWithRolesCR() error {
+func prepareKeycloakClientWithRolesCR() (*keycloakv1alpha1.KeycloakClient, error) {
 	keycloakClientCR := getKeycloakClientCR().DeepCopy()
 	keycloakClientCR.Spec.Roles = []keycloakv1alpha1.RoleRepresentation{{Name: "a"}, {Name: "b"}, {Name: "c"}}
 	keycloakClientCR.Name = testSecondKeycloakClientCRName
@@ -605,7 +608,7 @@ func keycloakClientScopeMappingsTest() error {
 	if err != nil {
 		return err
 	}
-	err = CreateKeycloakClient(client)
+	client, err = CreateKeycloakClient(client)
 	fmt.Println(err)
 
 	if err != nil {
@@ -690,7 +693,7 @@ func keycloakClientScopeMappingsTest() error {
 // FAIL
 func keycloakClientServiceAccountRealmRolesTest() error {
 	// deploy secondary client with a few client roles
-	err := prepareKeycloakClientWithRolesCR()
+	_, err := prepareKeycloakClientWithRolesCR()
 	if err != nil {
 		return err
 	}
@@ -700,7 +703,7 @@ func keycloakClientServiceAccountRealmRolesTest() error {
 	}
 
 	// deploy primary client with service account roles
-	err = prepareKeycloakClientWithServiceAccount()
+	_, err = prepareKeycloakClientWithServiceAccount()
 	if err != nil {
 		return err
 	}

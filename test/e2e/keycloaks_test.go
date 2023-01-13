@@ -36,6 +36,7 @@ var _ = Describe("Keycloak", func() {
 	})
 	It("keycloak status is not nil", func() {
 		keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+		By("KeycloakCR is created")
 		Expect(err).To(BeNil())
 		Expect(keycloakCR.Status).NotTo(BeNil())
 		Expect(keycloakCR.Status.Ready).To(BeTrue())

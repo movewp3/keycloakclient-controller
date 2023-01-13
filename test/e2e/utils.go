@@ -253,9 +253,8 @@ func CreateKeycloakRealm(kcr *keycloakv1alpha1.KeycloakRealm) error {
 	_, err := getKeycloakApiClient().KeycloakV1alpha1().KeycloakRealms(keycloakNamespace).Create(context.Background(), kcr, metav1.CreateOptions{})
 	return err
 }
-func CreateKeycloakClient(kcc *keycloakv1alpha1.KeycloakClient) error {
-	_, err := getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(keycloakNamespace).Create(context.Background(), kcc, metav1.CreateOptions{})
-	return err
+func CreateKeycloakClient(kcc *keycloakv1alpha1.KeycloakClient) (*keycloakv1alpha1.KeycloakClient, error) {
+	return getKeycloakApiClient().KeycloakV1alpha1().KeycloakClients(keycloakNamespace).Create(context.Background(), kcc, metav1.CreateOptions{})
 }
 func DeleteSecret(name string) error {
 	return getClient().CoreV1().Secrets(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
