@@ -118,8 +118,8 @@ func prepareUnmanagedKeycloaksCR(namespace string) error {
 }
 
 func prepareExternalKeycloaksCR() error {
-	keycloakURL := "http://keycloak.local:8082"
-
+	keycloakURL := "http://keycloak.local:80"
+	// 8082
 	secret, err := getExternalKeycloakSecret(keycloakNamespace)
 	if err != nil && !apiErrors.IsNotFound(err) {
 		GinkgoWriter.Printf("err: %s\n", err.Error())
@@ -169,8 +169,8 @@ func prepareExternalKeycloaksCR() error {
 	return err
 }
 func tearDownExternalKeycloaksCR() error {
-	keycloakURL := "http://keycloak.local:8082"
-
+	keycloakURL := "http://keycloak.local:80"
+	//8082
 	_, err := getExternalKeycloakSecret(keycloakNamespace)
 	if err != nil && !apiErrors.IsNotFound(err) {
 		GinkgoWriter.Printf("Secret not found in tearDownExternalKeycloaksCR: %s\n", err.Error())
