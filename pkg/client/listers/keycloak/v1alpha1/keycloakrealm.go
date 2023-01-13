@@ -21,6 +21,7 @@ import (
 	v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/tools/cache"
 )
 
@@ -92,7 +93,7 @@ func (s keycloakRealmNamespaceLister) Get(name string) (*v1alpha1.KeycloakRealm,
 		return nil, err
 	}
 	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("keycloakrealm"), name)
+		return nil, errors.NewNotFound(schema.GroupResource{Group: "keycloak.org", Resource: "keycloakrealm"}, name)
 	}
 	return obj.(*v1alpha1.KeycloakRealm), nil
 }

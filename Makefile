@@ -103,11 +103,19 @@ clientgen:
 	@mkdir -p ./tmp/code-generator
 	@git clone https://github.com/kubernetes/code-generator.git --branch v0.25.5 --single-branch  ./tmp/code-generator
 	# generate client
+
+	#mkdir api/keycloak
+	#cp api/v1alpha1/ api/keycloak/ -a
+	#./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/christianwoehrle/keycloakclient-controller/pkg/client github.com/christianwoehrle/keycloakclient-controller/api "keycloak:v1alpha1" --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
+	# achtung, sieht ./tmp nach output
+
+
 	./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/christianwoehrle/keycloakclient-controller/pkg/client github.com/christianwoehrle/keycloakclient-controller/api keycloak:v1alpha1 --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
+
 	# check generated client at ./pkg/client
-	@cp -r ./tmp/github.com/christianwoehrle/keycloakclient-operator/pkg/client/* ./pkg/client/
+	#@cp -r ./tmp/github.com/christianwoehrle/keycloakclient-operator/pkg/client/* ./pkg/client/
 	#@rm -rf ./tmp/github.com ./tmp/code-generator
-	@find pkg/client/ -name "*.go" -exec sed "s:github.com/christianwoehrle/keycloakclient-controller/api/keycloak/v1alpha1:github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1:g" -i {} \;
+	#@find pkg/client/ -name "*.go" -exec sed "s:github.com/christianwoehrle/keycloakclient-controller/api/keycloak/v1alpha1:github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1:g" -i {} \;
 
 
 
@@ -218,7 +226,7 @@ ENVTEST ?= $(LOCALBIN)/setup-envtest
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v3.8.7
-CONTROLLER_TOOLS_VERSION ?= v0.9.2
+CONTROLLER_TOOLS_VERSION ?= v0.10.0
 
 KUSTOMIZE_INSTALL_SCRIPT ?= "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
 .PHONY: kustomize
