@@ -137,7 +137,7 @@ verify:
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.#
-  go test `go list ./... | grep -v e2e`  -coverprofile=coverage.txt
+	go test `go list ./... | grep -v e2e`  -coverprofile=coverage.txt
 
 
 ##@ Build
