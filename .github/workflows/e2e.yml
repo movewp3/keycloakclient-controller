@@ -34,5 +34,3 @@ jobs:
         echo "getIngress finished ====================================================="
         make test/e2e
         echo "test/e2e ====================================================="
-        make cluster/clean
-        echo "cluster clean finished ====================================================="
