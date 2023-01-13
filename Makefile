@@ -202,8 +202,8 @@ installKeycloak:
 .PHONY: test/e2e
 test/e2e: 
 	@echo Running e2e local tests:
-    @export KUBECONFIG=/home/dwx1946/.kube/config-kind && export WATCH_NAMESPACE=keycloak && go run main.go  &
- 	@cd test/e2e
+	@export KUBECONFIG=/home/dwx1946/.kube/config-kind && export WATCH_NAMESPACE=keycloak && go run main.go  &
+	@cd test/e2e
 	@go test .  -coverprofile=coverage.txt
 
 .PHONY: uninstall
