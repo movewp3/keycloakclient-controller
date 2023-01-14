@@ -14,14 +14,9 @@ import (
 )
 
 const (
-	RealmsGetPath          = "/auth/admin/realms/%s"
-	RealmsCreatePath       = "/auth/admin/realms"
-	RealmsDeletePath       = "/auth/admin/realms/%s"
-	UserCreatePath         = "/auth/admin/realms/%s/users"
-	UserDeletePath         = "/auth/admin/realms/%s/users/%s"
-	UserGetPath            = "/auth/admin/realms/%s/users/%s"
-	UserFindByUsernamePath = "/auth/admin/realms/%s/users?username=%s&max=-1"
-	TokenPath              = "/auth/realms/master/protocol/openid-connect/token" // nolint
+	RealmsCreatePath = "/auth/admin/realms"
+	RealmsDeletePath = "/auth/admin/realms/%s"
+	TokenPath        = "/auth/realms/master/protocol/openid-connect/token" // nolint
 )
 
 func getDummyRealm() *v1alpha1.KeycloakRealm {
@@ -33,35 +28,6 @@ func getDummyRealm() *v1alpha1.KeycloakRealm {
 				Enabled: false,
 			},
 		},
-	}
-}
-
-func getExistingDummyUser() *v1alpha1.KeycloakAPIUser {
-	return &v1alpha1.KeycloakAPIUser{
-		ID:            "existing-dummy-user",
-		UserName:      "existing-dummy-user",
-		FirstName:     "existing-dummy-user",
-		LastName:      "existing-dummy-user",
-		Enabled:       true,
-		EmailVerified: true,
-		Credentials: []v1alpha1.KeycloakCredential{
-			{
-				Type:      "password",
-				Value:     "password",
-				Temporary: false,
-			},
-		},
-	}
-}
-
-func getDummyUser() *v1alpha1.KeycloakAPIUser {
-	return &v1alpha1.KeycloakAPIUser{
-		ID:            "dummy",
-		UserName:      "dummy",
-		FirstName:     "dummy",
-		LastName:      "dummy",
-		EmailVerified: false,
-		Enabled:       false,
 	}
 }
 
