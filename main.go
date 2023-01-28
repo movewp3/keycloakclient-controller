@@ -68,7 +68,7 @@ func main() {
 	var metricsAddr string
 	var enableLeaderElection bool
 	var probeAddr string
-	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8080", "The address the metric endpoint binds to.")
+	flag.StringVar(&metricsAddr, "metrics-bind-address", ":8383", "The address the metric endpoint binds to.")
 	flag.StringVar(&probeAddr, "health-probe-bind-address", ":8081", "The address the probe endpoint binds to.")
 	flag.BoolVar(&enableLeaderElection, "leader-elect", false,
 		"Enable leader election for controller manager. "+
@@ -98,7 +98,7 @@ func main() {
 
 	setupLog.Info(fmt.Sprintf("Setting watch namespace to '%v'", namespace))
 
-	syncPeriod := time.Minute * 5
+	syncPeriod := time.Minute * 10
 
 	// Set default manager options
 	options := manager.Options{
