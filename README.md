@@ -2,7 +2,7 @@
 </div>
 
 # keycloakclient-controller
-The keycloakclient-controller **manages Keycloak Clients in independent Keycloak Installations**. 
+The keycloakclient-controller **manages keycloak clients in independent keycloak installations**. 
 
 To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-CustomResource** is created, and the keycloakclient-controller sees to creating, changing, deleting the KeycloakClient as specified with the CustomResource.
 
