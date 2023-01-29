@@ -8,6 +8,7 @@ To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-Custom
 
 
 ## Description
+
 This Operator has it's origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
 If you look for the official KeycloakOperator from RedHat, please look into the [KeycloakOperator](https://github.com/keycloak/keycloak/tree/main/operator).
 
