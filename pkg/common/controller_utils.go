@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

@@ -20,7 +20,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
@@ -31,13 +31,13 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 
-	"github.com/christianwoehrle/keycloakclient-controller/version"
+	"github.com/movewp3/keycloakclient-controller/version"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 )
 
 // KeycloakReconciler reconciles a Keycloak object

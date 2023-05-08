@@ -18,7 +18,7 @@ limitations under the License.
 package scheme
 
 import (
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

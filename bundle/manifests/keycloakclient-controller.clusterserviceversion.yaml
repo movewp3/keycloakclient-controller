@@ -200,7 +200,7 @@ spec:
                 - --leader-elect
                 command:
                 - /manager
-                image: christianwoehrle/keycloakclient-controller:exploratory2
+                image: movewp3/keycloakclient-controller:exploratory2
                 livenessProbe:
                   httpGet:
                     path: /healthz

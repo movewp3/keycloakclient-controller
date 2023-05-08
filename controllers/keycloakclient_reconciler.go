@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"fmt"
 
-	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 )
 
 const (

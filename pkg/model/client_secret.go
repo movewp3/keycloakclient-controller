@@ -1,7 +1,7 @@
 package model
 
 import (
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 

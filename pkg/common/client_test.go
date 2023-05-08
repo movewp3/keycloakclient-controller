@@ -9,7 +9,7 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/stretchr/testify/assert"
 )
 

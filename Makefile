@@ -49,7 +49,7 @@ ifeq ($(USE_IMAGE_DIGESTS), true)
 endif
 
 # Image URL to use all building/pushing image targets
-IMG ?= christianwoehrle/keycloakclient-controller:exploratory2
+IMG ?= movewp3/keycloakclient-controller:exploratory2
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.2
 
@@ -106,16 +106,16 @@ clientgen:
 
 	#mkdir api/keycloak
 	#cp api/v1alpha1/ api/keycloak/ -a
-	#./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/christianwoehrle/keycloakclient-controller/pkg/client github.com/christianwoehrle/keycloakclient-controller/api "keycloak:v1alpha1" --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
+	#./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/movewp3/keycloakclient-controller/pkg/client github.com/movewp3/keycloakclient-controller/api "keycloak:v1alpha1" --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
 	# achtung, sieht ./tmp nach output
 
 
-	./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/christianwoehrle/keycloakclient-controller/pkg/client github.com/christianwoehrle/keycloakclient-controller/api keycloak:v1alpha1 --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
+	./tmp/code-generator/generate-groups.sh "client,informer,lister" github.com/movewp3/keycloakclient-controller/pkg/client github.com/movewp3/keycloakclient-controller/api keycloak:v1alpha1 --output-base ./tmp --go-header-file ./hack/boilerplate.go.txt
 
 	# check generated client at ./pkg/client
-	#@cp -r ./tmp/github.com/christianwoehrle/keycloakclient-operator/pkg/client/* ./pkg/client/
+	#@cp -r ./tmp/github.com/movewp3/keycloakclient-operator/pkg/client/* ./pkg/client/
 	#@rm -rf ./tmp/github.com ./tmp/code-generator
-	#@find pkg/client/ -name "*.go" -exec sed "s:github.com/christianwoehrle/keycloakclient-controller/api/keycloak/v1alpha1:github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1:g" -i {} \;
+	#@find pkg/client/ -name "*.go" -exec sed "s:github.com/movewp3/keycloakclient-controller/api/keycloak/v1alpha1:github.com/movewp3/keycloakclient-controller/api/v1alpha1:g" -i {} \;
 
 
 
@@ -204,7 +204,7 @@ test/e2e:
 	@echo Running e2e local tests:
 	@export WATCH_NAMESPACE=keycloak && go run main.go  &
 	@ sleep 30
-	@go test github.com/christianwoehrle/keycloakclient-controller/test/e2e  -coverprofile=coverage.txt
+	@go test github.com/movewp3/keycloakclient-controller/test/e2e  -coverprofile=coverage.txt
 
 .PHONY: uninstall
 uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.

@@ -13,8 +13,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"

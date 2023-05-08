@@ -28,7 +28,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/cache"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/k8sutil"
+	"github.com/movewp3/keycloakclient-controller/pkg/k8sutil"
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	// to ensure that exec-entrypoint and run can make use of them.
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -40,8 +40,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/controllers"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/controllers"
 	//+kubebuilder:scaffold:imports
 )
 

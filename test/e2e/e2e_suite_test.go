@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"

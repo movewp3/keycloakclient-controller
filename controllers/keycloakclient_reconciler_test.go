@@ -6,9 +6,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 
 	"github.com/stretchr/testify/assert"
 	v1 "k8s.io/api/core/v1"

@@ -1,4 +1,4 @@
-109851  11/09/22 16:55:56 operator-sdk init --domain org --repo github.com/christianwoehrle/keycloakclient-controller
+109851  11/09/22 16:55:56 operator-sdk init --domain org --repo github.com/movewp3/keycloakclient-controller
 
 109852  11/09/22 16:56:08 operator-sdk create api --group=keycloak --version=v1alpha1 --kind=Keycloak --resource --controller
 

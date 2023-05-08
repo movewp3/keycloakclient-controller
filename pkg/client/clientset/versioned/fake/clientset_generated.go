@@ -18,9 +18,9 @@ limitations under the License.
 package fake
 
 import (
-	clientset "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned"
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
-	fakekeycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1/fake"
+	clientset "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
+	fakekeycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1/fake"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/discovery"

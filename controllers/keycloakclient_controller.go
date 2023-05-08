@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -32,9 +32,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 )
 
 // KeycloakClientReconciler reconciles a KeycloakClient object
