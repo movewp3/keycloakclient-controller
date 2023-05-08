@@ -6,9 +6,9 @@ import (
 	"reflect"
 	"sort"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 	"github.com/pkg/errors"
 	v1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"

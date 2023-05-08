@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
 

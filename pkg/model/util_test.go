@@ -3,7 +3,7 @@ package model
 import (
 	"testing"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/stretchr/testify/assert"

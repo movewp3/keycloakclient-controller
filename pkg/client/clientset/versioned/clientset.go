@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"net/http"
 
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
 	discovery "k8s.io/client-go/discovery"
 	rest "k8s.io/client-go/rest"
 	flowcontrol "k8s.io/client-go/util/flowcontrol"

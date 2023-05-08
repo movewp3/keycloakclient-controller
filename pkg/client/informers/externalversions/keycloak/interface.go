@@ -18,8 +18,8 @@ limitations under the License.
 package keycloak
 
 import (
-	internalinterfaces "github.com/christianwoehrle/keycloakclient-controller/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/informers/externalversions/keycloak/v1alpha1"
+	internalinterfaces "github.com/movewp3/keycloakclient-controller/pkg/client/informers/externalversions/internalinterfaces"
+	v1alpha1 "github.com/movewp3/keycloakclient-controller/pkg/client/informers/externalversions/keycloak/v1alpha1"
 )
 
 // Interface provides access to each of this group's versions.

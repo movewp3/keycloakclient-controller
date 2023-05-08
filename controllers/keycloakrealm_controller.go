@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"github.com/pkg/errors"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 
@@ -34,8 +34,8 @@ import (
 
 	"k8s.io/client-go/tools/record"
 
-	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"

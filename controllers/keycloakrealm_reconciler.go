@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	kc "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 )
 
 type RealmReconciler interface {

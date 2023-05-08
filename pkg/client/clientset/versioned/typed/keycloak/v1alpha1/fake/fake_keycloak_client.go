@@ -18,7 +18,7 @@ limitations under the License.
 package fake
 
 import (
-	v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
+	v1alpha1 "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned/typed/keycloak/v1alpha1"
 	rest "k8s.io/client-go/rest"
 	testing "k8s.io/client-go/testing"
 )

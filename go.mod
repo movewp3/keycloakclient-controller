@@ -1,4 +1,4 @@
-module github.com/christianwoehrle/keycloakclient-controller
+module github.com/movewp3/keycloakclient-controller
 
 go 1.19
 

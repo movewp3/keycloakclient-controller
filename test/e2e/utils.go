@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	keycloakv1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned"
 
 	v1 "k8s.io/api/core/v1"
 
@@ -22,11 +22,11 @@ import (
 
 	"k8s.io/client-go/tools/clientcmd"
 
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 
 	"github.com/pkg/errors"
 
-	//v1alpha1 "github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
+	//v1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )

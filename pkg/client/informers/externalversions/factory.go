@@ -22,9 +22,9 @@ import (
 	sync "sync"
 	time "time"
 
-	versioned "github.com/christianwoehrle/keycloakclient-controller/pkg/client/clientset/versioned"
-	internalinterfaces "github.com/christianwoehrle/keycloakclient-controller/pkg/client/informers/externalversions/internalinterfaces"
-	keycloak "github.com/christianwoehrle/keycloakclient-controller/pkg/client/informers/externalversions/keycloak"
+	versioned "github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned"
+	internalinterfaces "github.com/movewp3/keycloakclient-controller/pkg/client/informers/externalversions/internalinterfaces"
+	keycloak "github.com/movewp3/keycloakclient-controller/pkg/client/informers/externalversions/keycloak"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"

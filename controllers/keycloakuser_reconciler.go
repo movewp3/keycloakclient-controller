@@ -3,8 +3,8 @@ package controllers
 import (
 	"fmt"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/common"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/common"
 )
 
 func GetUserRealmRolesDesiredState(state *common.UserState, realmRoles []string, realmName string) []common.ClusterAction {

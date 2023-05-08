@@ -3,8 +3,8 @@ package controllers
 import (
 	"testing"
 
-	"github.com/christianwoehrle/keycloakclient-controller/api/v1alpha1"
-	"github.com/christianwoehrle/keycloakclient-controller/pkg/model"
+	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/model"
 	"github.com/stretchr/testify/assert"
 )
 
