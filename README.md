@@ -9,7 +9,7 @@ To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-Custom
 
 ## Description
 
-This Operator has it's origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
+This Operator has its origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
 If you look for the official KeycloakOperator from RedHat, please look into the [KeycloakOperator](https://github.com/keycloak/keycloak/tree/main/operator).
 
 The Operator is opinionated in a way that it expects that Keycloak and
@@ -17,7 +17,7 @@ the KeyclokRealm are already set up (i.e. with one of the available Helm Charts)
 to handle the KeycloakClients for a Keycloak Installation and a specific realm.
 
 This fits our need as we set up Keycloak and the realm with Helm, and we have a lot of microservices that require their own KeycloakClient.
-The Microservices are deployed via Helm and it is easy to simply deploy a KeycloakClient Resource together with the other artefacts of the Microservice and let
+The Microservices are deployed via Helm, so it is easy to simply deploy a KeycloakClient Resource together with the other artefacts of the Microservice and let
 the Operator handle the creation of the KeycloakClient in Keycloak.
 
 ## Getting Started
