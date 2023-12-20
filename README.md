@@ -9,7 +9,7 @@ To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-Custom
 
 ## Description
 
-This Operator has it's origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
+This Operator has its origin from the [Legacy Keycloak Operator](https://github.com/keycloak/keycloak-operator).
 If you look for the official KeycloakOperator from RedHat, please look into the [KeycloakOperator](https://github.com/keycloak/keycloak/tree/main/operator).
 
 The Operator is opinionated in a way that it expects that Keycloak and
@@ -17,7 +17,7 @@ the KeyclokRealm are already set up (i.e. with one of the available Helm Charts)
 to handle the KeycloakClients for a Keycloak Installation and a specific realm.
 
 This fits our need as we set up Keycloak and the realm with Helm, and we have a lot of microservices that require their own KeycloakClient.
-The Microservices are deployed via Helm and it is easy to simply deploy a KeycloakClient Resource together with the other artefacts of the Microservice and let
+The Microservices are deployed via Helm, so it is easy to simply deploy a KeycloakClient Resource together with the other artefacts of the Microservice and let
 the Operator handle the creation of the KeycloakClient in Keycloak.
 
 ## Getting Started
@@ -27,21 +27,21 @@ You’ll need a Kubernetes cluster to run against. You can use [KIND](https://si
 ### Running on the cluster
 1. Install Instances of Custom Resources:
 
-```sh
-make install
-```
+    ```sh
+    make install
+    ```
 
 2. Build and push your image to the location specified by `IMG`:
 	
-```sh
-make docker-build docker-push IMG=<some-registry>/keycloakclient-controller:tag
-```
+    ```sh
+    make docker-build docker-push IMG=<some-registry>/keycloakclient-controller:tag
+    ```
 	
 3. Deploy the controller to the cluster with the image specified by `IMG`:
 
-```sh
-make deploy IMG=<some-registry>/keycloakclient-controller:tag
-```
+    ```sh
+    make deploy IMG=<some-registry>/keycloakclient-controller:tag
+    ```
 
 ### Uninstall CRDs
 To delete the CRDs from the cluster:
@@ -64,20 +64,20 @@ make undeploy
 This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
 
 It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
+which provides a reconcile function responsible for synchronizing resources until the desired state is reached on the cluster 
 
 ### Test It Out
 1. Install the CRDs into the cluster:
 
-```sh
-make install
-```
+    ```sh
+    make install
+    ```
 
 2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
 
-```sh
-make run
-```
+    ```sh
+    make run
+    ```
 
 **NOTE:** You can also run this in one step by running: `make install run`
 

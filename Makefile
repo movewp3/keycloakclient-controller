@@ -177,7 +177,7 @@ installKeycloak:
 	@helm repo add codecentric "https://codecentric.github.io/helm-charts"
 	@helm repo update
 	@kubectl apply -f config/installKeycloak/realm.yaml -n $(NAMESPACE)
-	@helm upgrade --install keycloak codecentric/keycloakx --values "config/installKeycloak/values.yaml" -n $(NAMESPACE)
+	@helm upgrade --install keycloak codecentric/keycloakx --version 2.1.0 --values "config/installKeycloak/values.yaml" -n $(NAMESPACE)
 	@kubectl apply -f config/installKeycloak/credential-keycloak-test.yaml -n $(NAMESPACE)
 	@kubectl get po -A 
 	@echo sleep 240 ==================
