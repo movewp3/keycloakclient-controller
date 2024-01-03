@@ -10,22 +10,25 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/model"
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 	k8sErrors "k8s.io/apimachinery/pkg/api/errors"
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
+	logf "sigs.k8s.io/controller-runtime/pkg/log"
 )
 
 const (
 	authURL = "auth/realms/master/protocol/openid-connect/token"
 )
+
+var logClient = logf.Log.WithName("common.client")
 
 type Requester interface {
 	Do(req *http.Request) (*http.Response, error)
@@ -44,7 +47,7 @@ type T interface{}
 func (c *Client) create(obj T, resourcePath, resourceName string) (string, error) {
 	jsonValue, err := json.Marshal(obj)
 	if err != nil {
-		logrus.Errorf("error %+v marshalling object", err)
+		log.Error(err, "error marshalling object", err)
 		return "", nil
 	}
 
@@ -54,7 +57,7 @@ func (c *Client) create(obj T, resourcePath, resourceName string) (string, error
 		bytes.NewBuffer(jsonValue),
 	)
 	if err != nil {
-		logrus.Errorf("error creating POST %s request %+v", resourceName, err)
+		log.Error(err, "error creating POST request ", resourceName)
 		return "", errors.Wrapf(err, "error creating POST %s request", resourceName)
 	}
 
@@ -63,7 +66,7 @@ func (c *Client) create(obj T, resourcePath, resourceName string) (string, error
 	res, err := c.requester.Do(req)
 
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		log.Error(err, "error on request ")
 		return "", errors.Wrapf(err, "error performing POST %s request", resourceName)
 	}
 	defer res.Body.Close()
@@ -175,20 +178,21 @@ func (c *Client) get(resourcePath, resourceName string, unMarshalFunc func(body 
 		nil,
 	)
 	if err != nil {
-		logrus.Errorf("error creating GET %s request %+v", resourceName, err)
+		log.Error(err, "error creating GET request ", resourceName, ": ", err)
 		return nil, errors.Wrapf(err, "error creating GET %s request", resourceName)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+
+		logClient.Error(err, "error on request")
 		return nil, errors.Wrapf(err, "error performing GET %s request", resourceName)
 	}
 
 	defer res.Body.Close()
 	if res.StatusCode == 404 {
-		logrus.Errorf("Resource %v/%v doesn't exist", resourcePath, resourceName)
+		logClient.Error(nil, "Resource %v/%v doesn't exist", resourcePath, resourceName)
 		return nil, nil
 	}
 
@@ -198,13 +202,13 @@ func (c *Client) get(resourcePath, resourceName string, unMarshalFunc func(body 
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		logrus.Errorf("error reading response %+v", err)
+		logClient.Error(nil, "error reading response %+v", err)
 		return nil, errors.Wrapf(err, "error reading %s GET response", resourceName)
 	}
 
 	obj, err := unMarshalFunc(body)
 	if err != nil {
-		logrus.Error(err)
+		logClient.Error(err, "error unmarshalling")
 		return nil, err
 	}
 	return obj, nil
@@ -301,7 +305,7 @@ func (c *Client) update(obj T, resourcePath, resourceName string) error {
 		bytes.NewBuffer(jsonValue),
 	)
 	if err != nil {
-		logrus.Errorf("error creating UPDATE %s request %+v", resourceName, err)
+		logClient.Error(err, "error creating UPDATE %s request", resourceName)
 		return errors.Wrapf(err, "error creating UPDATE %s request", resourceName)
 	}
 
@@ -309,12 +313,12 @@ func (c *Client) update(obj T, resourcePath, resourceName string) error {
 	req.Header.Add("Authorization", "Bearer "+c.token)
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		logClient.Error(err, "error on request")
 		return errors.Wrapf(err, "error performing UPDATE %s request", resourceName)
 	}
 	defer res.Body.Close()
 	if res.StatusCode < 200 || res.StatusCode > 299 {
-		logrus.Errorf("failed to UPDATE %s %v", resourceName, res.Status)
+		logClient.Error(err, "failed to UPDATE %s %v", resourceName, res.Status)
 		return errors.Errorf("failed to UPDATE %s: (%d) %s", resourceName, res.StatusCode, res.Status)
 	}
 
@@ -366,19 +370,19 @@ func (c *Client) delete(resourcePath, resourceName string, obj T) error {
 	}
 
 	if err != nil {
-		logrus.Errorf("error creating DELETE %s request %+v", resourceName, err)
+		logClient.Error(err, "error creating DELETE %s request", resourceName)
 		return errors.Wrapf(err, "error creating DELETE %s request", resourceName)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		logClient.Error(err, "error on request")
 		return errors.Wrapf(err, "error performing DELETE %s request", resourceName)
 	}
 	defer res.Body.Close()
 	if res.StatusCode == 404 {
-		logrus.Errorf("Resource %v/%v already deleted", resourcePath, resourceName)
+		logClient.Error(err, "Resource %v/%v already deleted", resourcePath, resourceName)
 	}
 	if res.StatusCode != 204 && res.StatusCode != 404 {
 		return errors.Errorf("failed to DELETE %s: (%d) %s", resourceName, res.StatusCode, res.Status)
@@ -430,14 +434,14 @@ func (c *Client) list(resourcePath, resourceName string, unMarshalListFunc func(
 		nil,
 	)
 	if err != nil {
-		logrus.Errorf("error creating LIST %s request %+v", resourceName, err)
+		logClient.Error(err, "error creating LIST %s request %+v", resourceName, err)
 		return nil, errors.Wrapf(err, "error creating LIST %s request", resourceName)
 	}
 
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", c.token))
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		logClient.Error(err, "error on request")
 		return nil, errors.Wrapf(err, "error performing LIST %s request", resourceName)
 	}
 	defer res.Body.Close()
@@ -448,13 +452,13 @@ func (c *Client) list(resourcePath, resourceName string, unMarshalListFunc func(
 
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		logrus.Errorf("error reading response %+v", err)
+		logClient.Error(err, "error reading response")
 		return nil, errors.Wrapf(err, "error reading %s LIST response", resourceName)
 	}
 
 	objs, err := unMarshalListFunc(body)
 	if err != nil {
-		logrus.Error(err)
+		logClient.Error(err, "error unmarshalling body")
 	}
 
 	return objs, nil
@@ -649,17 +653,17 @@ func (c *Client) Ping() error {
 	u := c.URL + "/auth/"
 	req, err := http.NewRequest("GET", u, nil)
 	if err != nil {
-		logrus.Errorf("error creating ping request %+v", err)
+		logClient.Error(err, "error creating ping request")
 		return errors.Wrap(err, "error creating ping request")
 	}
 
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		logClient.Error(err, "error on request")
 		return errors.Wrapf(err, "error performing ping request")
 	}
 
-	logrus.Debugf("response status: %v, %v", res.StatusCode, res.Status)
+	logClient.Info("response status: " + strconv.Itoa(res.StatusCode) + " " + res.Status)
 	if res.StatusCode != 200 {
 		return errors.Errorf("failed to ping, response status code: %v", res.StatusCode)
 	}
@@ -685,7 +689,7 @@ func (c *Client) GetServiceAccountUser(realmName, clientID string) (*v1alpha1.Ke
 }
 
 // login requests a new auth token from Keycloak
-func (c *Client) login(user, pass string) error {
+func (c *Client) login_old(user, pass string) error {
 	form := url.Values{}
 	form.Add("username", user)
 	form.Add("password", pass)
@@ -704,13 +708,13 @@ func (c *Client) login(user, pass string) error {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	res, err := c.requester.Do(req)
 	if err != nil {
-		logrus.Errorf("error on request %+v", err)
+		logClient.Error(err, "error on request ")
 		return errors.Wrap(err, "error performing token request")
 	}
 	defer res.Body.Close()
 	body, err := ioutil.ReadAll(res.Body)
 	if err != nil {
-		logrus.Errorf("error reading response %+v", err)
+		logClient.Error(err, "error reading response")
 		return errors.Wrap(err, "error reading token response")
 	}
 
@@ -721,12 +725,58 @@ func (c *Client) login(user, pass string) error {
 	}
 
 	if tokenRes.Error != "" {
-		logrus.Errorf("error with request: " + tokenRes.ErrorDescription)
+		logClient.Error(errors.New(tokenRes.Error), "error with request: %s", tokenRes.ErrorDescription)
 		return errors.Errorf(tokenRes.ErrorDescription)
 	}
 
 	c.token = tokenRes.AccessToken
 
+	return nil
+}
+
+// login requests a new auth token from Keycloak
+func (c *Client) login(client, credential string) error {
+	form := url.Values{}
+
+	form.Add("client_id", client)
+	form.Add("client_secret", credential)
+	form.Add("grant_type", "client_credentials")
+
+	req, err := http.NewRequest(
+		"POST",
+		fmt.Sprintf("%s/%s", c.URL, authURL),
+		strings.NewReader(form.Encode()),
+	)
+	if err != nil {
+		return errors.Wrap(err, "error creating login request")
+	}
+
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := c.requester.Do(req)
+	if err != nil {
+		logClient.Error(err, "error on request ")
+		return errors.Wrap(err, "error performing token request")
+	}
+	defer res.Body.Close()
+	body, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		logClient.Error(err, "error reading response")
+		return errors.Wrap(err, "error reading token response")
+	}
+
+	tokenRes := &v1alpha1.TokenResponse{}
+	err = json.Unmarshal(body, tokenRes)
+	if err != nil {
+		return errors.Wrap(err, "error parsing token response")
+	}
+
+	if tokenRes.Error != "" {
+		logClient.Error(errors.New(tokenRes.Error), "error with request: %s", tokenRes.ErrorDescription)
+		return errors.Errorf(tokenRes.ErrorDescription)
+	}
+
+	c.token = tokenRes.AccessToken
+	logClient.Info("login with serviceaccount " + client + " succeeded")
 	return nil
 }
 
@@ -855,6 +905,8 @@ func (i *LocalConfigKeycloakFactory) AuthenticatedClient(kc v1alpha1.Keycloak, i
 	}
 	user := string(adminCreds.Data[model.AdminUsernameProperty])
 	pass := string(adminCreds.Data[model.AdminPasswordProperty])
+	clientName := string(adminCreds.Data[model.ClientName])
+	clientCredential := string(adminCreds.Data[model.ClientPassword])
 
 	var serverCert []byte = nil
 	if !insecureSsl {
@@ -878,8 +930,17 @@ func (i *LocalConfigKeycloakFactory) AuthenticatedClient(kc v1alpha1.Keycloak, i
 		URL:       kcURL,
 		requester: requester,
 	}
-	if err := client.login(user, pass); err != nil {
-		return nil, err
+	if clientName != "" && clientCredential != "" {
+		client.login(clientName, clientCredential)
+		if err := client.login_old(user, pass); err != nil {
+			if err := client.login_old(user, pass); err != nil {
+				return nil, err
+			}
+		}
+	} else {
+		if err := client.login_old(user, pass); err != nil {
+			return nil, err
+		}
 	}
 	return client, nil
 }

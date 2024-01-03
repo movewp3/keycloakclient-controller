@@ -5,6 +5,8 @@ const (
 	ApplicationName                  = "keycloak"
 	AdminUsernameProperty            = "ADMIN_USERNAME"
 	AdminPasswordProperty            = "ADMIN_PASSWORD"
+	ClientName                       = "KEYCLOAKCLIENT_CONTROLLER_NAME"
+	ClientPassword                   = "KEYCLOAKCLIENT_CONTROLLER_PASSWORD"
 	ServingCertSecretName            = "sso-x509-https-secret" // nolint
 	ClientSecretName                 = ApplicationName + "-client-secret"
 	ClientSecretClientIDProperty     = "CLIENT_ID"
