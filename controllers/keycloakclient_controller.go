@@ -125,6 +125,7 @@ func (r *KeycloakClientReconciler) Reconcile(ctx context.Context, request ctrl.R
 
 			err = clientState.Read(r.context, instance, authenticated, r.Client)
 			if err != nil {
+				logKcc.Error(err, "error reading client state")
 				return r.ManageError(instance, err)
 			}
 
@@ -137,6 +138,8 @@ func (r *KeycloakClientReconciler) Reconcile(ctx context.Context, request ctrl.R
 			// Run all actions to keep the realms updated
 			err = actionRunner.RunAll(desiredState)
 			if err != nil {
+				logKcc.Error(err, "error in actionRunner")
+
 				return r.ManageError(instance, err)
 			}
 		}
@@ -176,10 +179,17 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 	client.Status.Ready = true
 	client.Status.Message = ""
 	client.Status.Phase = v1alpha1.PhaseReconciling
-
 	err := r.Client.Status().Update(r.context, client)
 	if err != nil {
 		logKcc.Error(err, "unable to update status")
+	}
+
+	if client.Spec.Client.Secret != "" {
+		client.Spec.Client.Secret = ""
+		err := r.Client.Update(r.context, client)
+		if err != nil {
+			logKcc.Error(err, "unable to remove secret from keycloakclient"+client.Spec.Client.Name)
+		}
 	}
 
 	// Finalizer already set?

@@ -47,10 +47,17 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 		}
 		desired.AddAction(i.getCreatedClientState(state, cr))
 	} else {
+		if state.ClientSecret != nil {
+			if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
+				logKcc.Info("use secret from k8s secret " + state.ClientSecret.ObjectMeta.Name)
+				cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+			}
+		}
 		desired.AddAction(i.getUpdatedClientState(state, cr))
 	}
 
 	if state.ClientSecret == nil {
+		logKcc.Info("unexpected missing k8s secret")
 		desired.AddAction(i.getCreatedClientSecretState(state, cr))
 	} else {
 		desired.AddAction(i.getUpdatedClientSecretState(state, cr))

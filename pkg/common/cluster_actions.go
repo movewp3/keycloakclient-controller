@@ -148,7 +148,7 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 	log.Info(fmt.Sprintf("FAILED: create client failed for client %s with error %s", obj.Spec.Client.Name, err.Error()))
 
 	if err.Error() == "failed to create client: (409) 409 Conflict" {
-		log.Info(" retry create client after 409 Conclict")
+		log.Info(" retry create client after 409 Conflict")
 
 		uid, err2 := i.keycloakClient.GetClientID(obj.Spec.Client.ClientID, realm)
 
