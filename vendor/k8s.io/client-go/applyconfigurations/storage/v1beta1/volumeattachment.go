@@ -42,7 +42,7 @@ func VolumeAttachment(name string) *VolumeAttachmentApplyConfiguration {
 	b := &VolumeAttachmentApplyConfiguration{}
 	b.WithName(name)
 	b.WithKind("VolumeAttachment")
-	b.WithAPIVersion("storage.k8s.io/v1")
+	b.WithAPIVersion("storage.k8s.io/v1beta1")
 	return b
 }
 
@@ -77,7 +77,7 @@ func extractVolumeAttachment(volumeAttachment *storagev1beta1.VolumeAttachment, 
 	b.WithName(volumeAttachment.Name)
 
 	b.WithKind("VolumeAttachment")
-	b.WithAPIVersion("storage.k8s.io/v1")
+	b.WithAPIVersion("storage.k8s.io/v1beta1")
 	return b, nil
 }
 
