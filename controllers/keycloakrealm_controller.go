@@ -25,7 +25,6 @@ import (
 	"github.com/pkg/errors"
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 
-	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -178,16 +177,7 @@ func (r *KeycloakRealmReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	}
 
 	// Watch for changes to primary resource KeycloakRealm
-	err = c.Watch(&source.Kind{Type: &kc.KeycloakRealm{}}, &handler.EnqueueRequestForObject{})
-	if err != nil {
-		return err
-	}
-
-	// Make sure to watch the credential secrets
-	err = c.Watch(&source.Kind{Type: &corev1.Secret{}}, &handler.EnqueueRequestForOwner{
-		IsController: true,
-		OwnerType:    &kc.KeycloakRealm{},
-	})
+	err = c.Watch(source.Kind(mgr.GetCache(), &kc.KeycloakRealm{}), &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}

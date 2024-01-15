@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	"sigs.k8s.io/controller-runtime/pkg/manager"
+
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -11,6 +13,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+)
+
+var (
+	mgr manager.Manager
 )
 
 const (
@@ -29,10 +35,13 @@ func WatchSecondaryResource(c controller.Controller, controllerName string, reso
 	}
 
 	// Set up the actual watch
-	err := c.Watch(&source.Kind{Type: objectTypetoWatch}, &handler.EnqueueRequestForOwner{
+	err := c.Watch(source.Kind(mgr.GetCache(), objectTypetoWatch), &handler.EnqueueRequestForObject{})
+
+	/*err := c.Watch(&source.Kind{Type: objectTypetoWatch}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    cr,
 	})
+	*/
 
 	// Retry on error
 	if err != nil {
