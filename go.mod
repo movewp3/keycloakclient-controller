@@ -2,8 +2,6 @@ module github.com/movewp3/keycloakclient-controller
 
 go 1.21
 
-toolchain go1.21.6
-
 require (
 	github.com/json-iterator/go v1.1.12
 	github.com/onsi/ginkgo/v2 v2.13.0
