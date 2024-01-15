@@ -41,7 +41,7 @@ func CSINode(name string) *CSINodeApplyConfiguration {
 	b := &CSINodeApplyConfiguration{}
 	b.WithName(name)
 	b.WithKind("CSINode")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b
 }
 
@@ -76,7 +76,7 @@ func extractCSINode(cSINode *storagev1beta1.CSINode, fieldManager string, subres
 	b.WithName(cSINode.Name)
 
 	b.WithKind("CSINode")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b, nil
 }
 

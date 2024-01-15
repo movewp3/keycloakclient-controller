@@ -41,7 +41,7 @@ func CSIDriver(name string) *CSIDriverApplyConfiguration {
 	b := &CSIDriverApplyConfiguration{}
 	b.WithName(name)
 	b.WithKind("CSIDriver")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b
 }
 
@@ -76,7 +76,7 @@ func extractCSIDriver(cSIDriver *storagev1beta1.CSIDriver, fieldManager string, 
 	b.WithName(cSIDriver.Name)
 
 	b.WithKind("CSIDriver")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b, nil
 }
 

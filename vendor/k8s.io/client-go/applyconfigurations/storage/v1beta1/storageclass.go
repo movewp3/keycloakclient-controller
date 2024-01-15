@@ -49,7 +49,7 @@ func StorageClass(name string) *StorageClassApplyConfiguration {
 	b := &StorageClassApplyConfiguration{}
 	b.WithName(name)
 	b.WithKind("StorageClass")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b
 }
 
@@ -84,7 +84,7 @@ func extractStorageClass(storageClass *v1beta1.StorageClass, fieldManager string
 	b.WithName(storageClass.Name)
 
 	b.WithKind("StorageClass")
-	b.WithAPIVersion("storage.k8s.io/v1beta1")
+	b.WithAPIVersion("storage.k8s.io/v1")
 	return b, nil
 }
 
