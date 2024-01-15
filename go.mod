@@ -1,6 +1,6 @@
 module github.com/movewp3/keycloakclient-controller
 
-go 1.19
+go 1.20
 
 require (
 	github.com/json-iterator/go v1.1.12
