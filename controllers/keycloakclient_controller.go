@@ -184,6 +184,14 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 		logKcc.Error(err, "unable to update status")
 	}
 
+	if client.Spec.Client.Secret != "" {
+		client.Spec.Client.Secret = ""
+		err := r.Client.Update(r.context, client)
+		if err != nil {
+			logKcc.Error(err, "unable to remove secret from keycloakclient"+client.Spec.Client.Name)
+		}
+	}
+
 	// Finalizer already set?
 	finalizerExists := false
 	for _, finalizer := range client.Finalizers {
