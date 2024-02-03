@@ -2,7 +2,15 @@ package controllers
 
 import (
 	"bytes"
+	"context"
+	"crypto/sha256"
 	"fmt"
+
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -27,6 +35,27 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 	}
 }
 
+// AuthenticatedClient returns an authenticated client for requesting endpoints from the Keycloak api
+func getSecretSeed() (string, error) {
+	config, err := config2.GetConfig()
+	if err != nil {
+		return "", err
+	}
+
+	secretClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return "", err
+	}
+
+	secretSeedSecret, err := secretClient.CoreV1().Secrets("keycloak").Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
+	if err != nil {
+		return "", errors.Wrap(err, "failed to get the secretSeed")
+	}
+	secretSeed := string(secretSeedSecret.Data[model.KeycloakClientSecretSeed])
+
+	return secretSeed, nil
+}
+
 func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientState, cr *kc.KeycloakClient) common.DesiredClusterState {
 	desired := common.DesiredClusterState{}
 
@@ -38,19 +67,34 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 
 	if state.Client == nil {
 		if cr.Spec.Client.Secret == "" {
-			if state.ClientSecret != nil {
-				if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
-					logKcc.Info("reconstruct Secret for " + cr.Spec.Client.ID)
-					cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+
+			secretSeed, _ := getSecretSeed()
+			if secretSeed != "" {
+				h := sha256.New()
+				h.Write([]byte(secretSeed + cr.Spec.Client.ClientID + model.SALT))
+				sha := fmt.Sprintf("%x", h.Sum(nil))
+				logKcc.Info("construct Secret for " + cr.Spec.Client.ID + " from secretSeed")
+				cr.Spec.Client.Secret = sha
+
+			} else {
+				if state.ClientSecret != nil {
+					if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
+						logKcc.Info("reconstruct Secret for " + cr.Spec.Client.ID)
+						cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+					}
 				}
 			}
 		}
 		desired.AddAction(i.getCreatedClientState(state, cr))
 	} else {
-		if state.ClientSecret != nil {
-			if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
-				logKcc.Info("use secret from k8s secret " + state.ClientSecret.ObjectMeta.Name)
-				cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+		if cr.Spec.Client.Secret == "" {
+			secretSeed, _ := getSecretSeed()
+			if secretSeed != "" {
+				h := sha256.New()
+				h.Write([]byte(secretSeed + cr.Spec.Client.Name + model.SALT))
+				sha := fmt.Sprintf("%x", h.Sum(nil))
+				logKcc.Info("construct Secret for " + cr.Spec.Client.ID + " from secretSeed")
+				cr.Spec.Client.Secret = sha
 			}
 		}
 		desired.AddAction(i.getUpdatedClientState(state, cr))
