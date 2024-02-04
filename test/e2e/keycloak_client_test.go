@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"context"
+	"encoding/base64"
 	"fmt"
 	"reflect"
 	"sort"
@@ -460,7 +461,7 @@ func keycloakClientWithSecretSeedTest() error {
 		return err
 	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
-	if retrievedSecret.StringData["CLIENT_SECRET"] != expectedSecret {
+	if string(retrievedSecret.Data["CLIENT_SECRET"]) != base64.StdEncoding.EncodeToString([]byte(expectedSecret)) {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, it should not be set"), secret.Name)
 	}
 
