@@ -34,6 +34,17 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 		Keycloak: keycloak,
 	}
 }
+func GetClientShaCode(clientID string) (string, error) {
+	secretSeed, _ := getSecretSeed()
+	if secretSeed != "" {
+		h := sha256.New()
+		h.Write([]byte(secretSeed + clientID + model.SALT))
+		sha := fmt.Sprintf("%x", h.Sum(nil))
+		logKcc.Info("construct Secret for " + clientID + " from secretSeed")
+		return sha, nil
+	}
+	return "", errors.New("No secretSeed")
+}
 
 // AuthenticatedClient returns an authenticated client for requesting endpoints from the Keycloak api
 func getSecretSeed() (string, error) {
@@ -65,17 +76,12 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 		return desired
 	}
 
-	if state.Client == nil {
+	if state.Client == nil { // no configuration of a keycloakclient in keycloak
 		if cr.Spec.Client.Secret == "" {
 
-			secretSeed, _ := getSecretSeed()
-			if secretSeed != "" {
-				h := sha256.New()
-				h.Write([]byte(secretSeed + cr.Spec.Client.ClientID + model.SALT))
-				sha := fmt.Sprintf("%x", h.Sum(nil))
-				logKcc.Info("construct Secret for " + cr.Spec.Client.ID + " from secretSeed")
+			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			if err == nil {
 				cr.Spec.Client.Secret = sha
-
 			} else {
 				if state.ClientSecret != nil {
 					if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
@@ -88,12 +94,8 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 		desired.AddAction(i.getCreatedClientState(state, cr))
 	} else {
 		if cr.Spec.Client.Secret == "" {
-			secretSeed, _ := getSecretSeed()
-			if secretSeed != "" {
-				h := sha256.New()
-				h.Write([]byte(secretSeed + cr.Spec.Client.Name + model.SALT))
-				sha := fmt.Sprintf("%x", h.Sum(nil))
-				logKcc.Info("construct Secret for " + cr.Spec.Client.ID + " from secretSeed")
+			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			if err == nil {
 				cr.Spec.Client.Secret = sha
 			}
 		}

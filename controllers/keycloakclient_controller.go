@@ -204,7 +204,10 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 		logKcc.Info(fmt.Sprintf("added finalizer to keycloak client %v/%v",
 			client.Namespace,
 			client.Spec.Client.ClientID))
-
+		sha, _ := GetClientShaCode(client.Spec.Client.ClientID)
+		if client.Spec.Client.Secret == sha {
+			client.Spec.Client.Secret = ""
+		}
 		return r.Client.Update(r.context, client)
 	}
 

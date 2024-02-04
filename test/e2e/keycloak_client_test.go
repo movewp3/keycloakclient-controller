@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"sort"
 
+	"github.com/movewp3/keycloakclient-controller/controllers"
+
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"github.com/movewp3/keycloakclient-controller/pkg/model"
@@ -25,6 +27,7 @@ const (
 )
 
 var ErrDeprecatedClientSecretFound = errors.New("deprecated client secret found")
+var ErrSecretSetInKeycloakclient = errors.New("if a keycloakclient doesn´t set a secret, it should not be set")
 
 var _ = Describe("KeycloakClient", func() {
 
@@ -110,6 +113,17 @@ var _ = Describe("KeycloakClient", func() {
 		})
 	})
 
+	Describe("keycloakClientWithSecretSeedTest", func() {
+		//XXXXXX
+		BeforeEach(func() {
+			getKeycloakConfidentialClientCR()
+		})
+		It("test basic client", func() {
+			err := keycloakClientWithSecretSeedTest()
+			Expect(err).To(BeNil())
+		})
+	})
+
 })
 
 func getKeycloakClientCR() *keycloakv1alpha1.KeycloakClient {
@@ -145,6 +159,50 @@ func getKeycloakClientCR() *keycloakv1alpha1.KeycloakClient {
 				DirectAccessGrantsEnabled: true,
 				ServiceAccountsEnabled:    false,
 				PublicClient:              true,
+				FrontchannelLogout:        false,
+				Protocol:                  "openid-connect",
+				FullScopeAllowed:          &[]bool{true}[0],
+				NodeReRegistrationTimeout: -1,
+				DefaultClientScopes:       []string{"profile"},
+				OptionalClientScopes:      []string{"microprofile-jwt"},
+			},
+		},
+	}
+}
+
+func getKeycloakConfidentialClientCR() *keycloakv1alpha1.KeycloakClient {
+	k8sName := testKeycloakClientCRName
+	id := testKeycloakClientCRName
+	labels := CreateLabel(keycloakNamespace)
+
+	return &keycloakv1alpha1.KeycloakClient{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      k8sName,
+			Namespace: keycloakNamespace,
+			Labels:    labels,
+		},
+		Spec: keycloakv1alpha1.KeycloakClientSpec{
+			RealmSelector: &metav1.LabelSelector{
+				MatchLabels: labels,
+			},
+			Client: &keycloakv1alpha1.KeycloakAPIClient{
+				ID:                        id,
+				ClientID:                  id,
+				Name:                      id,
+				SurrogateAuthRequired:     false,
+				Enabled:                   true,
+				BaseURL:                   "https://operator-test.url/client-base-url",
+				AdminURL:                  "https://operator-test.url/client-admin-url",
+				RootURL:                   "https://operator-test.url/client-root-url",
+				Description:               "Client used within operator tests",
+				WebOrigins:                []string{"https://operator-test.url"},
+				BearerOnly:                false,
+				ConsentRequired:           false,
+				StandardFlowEnabled:       true,
+				ImplicitFlowEnabled:       false,
+				DirectAccessGrantsEnabled: false,
+				ServiceAccountsEnabled:    true,
+				PublicClient:              false,
 				FrontchannelLogout:        false,
 				Protocol:                  "openid-connect",
 				FullScopeAllowed:          &[]bool{true}[0],
@@ -351,6 +409,59 @@ func keycloakClientDeprecatedClientSecretTest() error {
 	err = GetNamespacedSecret(keycloakNamespace, secret.Name, &retrievedSecret)
 	if !apierrors.IsNotFound(err) {
 		return err
+	}
+
+	return nil
+}
+
+func keycloakClientWithSecretSeedTest() error {
+	//XXXXXXXXXXX
+	client := getKeycloakConfidentialClientCR()
+	secret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "credential-keycloak-client-secret-seed",
+			Namespace: keycloakNamespace,
+		},
+		StringData: map[string]string{
+			"SECRET_SEED": "aHZ5c0FhcTRTUlFWNGFzddddbnVBSzQ4SnMzZ3hUTEU=,",
+		},
+	}
+
+	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
+	err := CreateSecret(secret)
+	if err != nil {
+		return err
+	}
+
+	// create client
+	client, err = CreateKeycloakClient(client)
+	if err != nil {
+		return err
+	}
+	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
+	if err != nil {
+		return err
+	}
+
+	if client.Spec.Client.Secret != "" {
+		return errors.Wrap(ErrSecretSetInKeycloakclient, client.Spec.Client.ClientID)
+	}
+
+	// verify client secret removal in secondary resources
+	_, exists := client.Status.SecondaryResources[secret.Name]
+	if exists {
+		return errors.Wrap(ErrDeprecatedClientSecretFound, secret.Name)
+	}
+
+	// verify client secret removal
+	var retrievedSecret v1.Secret
+	err = GetNamespacedSecret(keycloakNamespace, secret.Name, &retrievedSecret)
+	if !apierrors.IsNotFound(err) {
+		return err
+	}
+	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	if retrievedSecret.StringData["CLIENT_SECRET"] != expectedSecret {
+		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, it should not be set"), secret.Name)
 	}
 
 	return nil
