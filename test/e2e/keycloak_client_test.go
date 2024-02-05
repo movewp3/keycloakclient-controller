@@ -480,7 +480,7 @@ func keycloakClientWithSecretSeedTest() error {
 	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"]))
 	fmt.Println("retrievedSecret " + string(val))
 
-	if string(retrievedSecret.Data["CLIENT_SECRET"]) != base64.StdEncoding.EncodeToString([]byte(expectedSecret)) {
+	if string(retrievedSecret.Data["CLIENT_SECRET"]) != expectedSecret {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, the sha code with salt should be used"), secret.Name)
 	}
 
