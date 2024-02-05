@@ -119,7 +119,7 @@ var _ = Describe("KeycloakClient", func() {
 		BeforeEach(func() {
 			getKeycloakConfidentialClientCR()
 		})
-		It("test basic client", func() {
+		It("test client with secret seed", func() {
 			err := keycloakClientWithSecretSeedTest()
 			Expect(err).To(BeNil())
 		})
@@ -431,14 +431,21 @@ func keycloakClientWithSecretSeedTest() error {
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
 	err := CreateSecret(secret)
 	if err != nil {
+
 		return err
 	}
 
+	fmt.Println("secret create: " + secret.ObjectMeta.Name)
+
 	// create client
+	fmt.Println("create client " + client.Spec.Client.ClientID)
 	client, err = CreateKeycloakClient(client)
+	fmt.Println("create client err" + err.Error())
+
 	if err != nil {
 		return err
 	}
+	fmt.Println("wait for client " + testKeycloakClientCRName)
 	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
 		return err
