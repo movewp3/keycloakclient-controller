@@ -460,12 +460,21 @@ func keycloakClientWithSecretSeedTest() error {
 
 	// verify client secret removal
 	var retrievedSecret v1.Secret
-	fmt.Println("search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakConfidentialClientCRName)
-	err = GetNamespacedSecret(keycloakNamespace, "keycloak-client-secret-"+testKeycloakConfidentialClientCRName, &retrievedSecret)
+	secretName := "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
+	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
+	err = GetNamespacedSecret(keycloakNamespace, secretName, &retrievedSecret)
 	if err != nil {
-		fmt.Println("error search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakConfidentialClientCRName + " " + err.Error())
+		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
+	}
+	secretName = testKeycloakCRName + "-client-secret-" + testKeycloakConfidentialClientCRName
+
+	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
+	err = GetNamespacedSecret(keycloakNamespace, secretName, &retrievedSecret)
+	if err != nil {
+		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 		return err
 	}
+
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
 
 	fmt.Println("expectedSecret " + expectedSecret)
