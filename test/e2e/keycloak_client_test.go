@@ -473,6 +473,10 @@ func keycloakClientWithSecretSeedTest() error {
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
 
 	fmt.Println("expectedSecret " + expectedSecret)
+	fmt.Println("retrievedSecret " + retrievedSecret.Name)
+	for key, v := range retrievedSecret.Data {
+		fmt.Println("retrievedSecret " + key + " " + string(v))
+	}
 	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
 	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"]))
 	fmt.Println("retrievedSecret " + string(val))
