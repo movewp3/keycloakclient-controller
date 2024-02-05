@@ -4,10 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/movewp3/keycloakclient-controller/controllers"
 	"reflect"
 	"sort"
 	"strconv"
+
+	"github.com/movewp3/keycloakclient-controller/controllers"
 
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -405,9 +406,7 @@ func keycloakClientDeprecatedClientSecretTest() error {
 		return errors.Wrap(ErrDeprecatedClientSecretFound, secret.Name)
 	}
 
-	// verify client secret removal
-	var retrievedSecret v1.Secret
-	err = GetNamespacedSecret(keycloakNamespace, secret.Name, &retrievedSecret)
+	_, err = GetSecret(secret.Name)
 	if !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -458,9 +457,6 @@ func keycloakClientWithSecretSeedTest() error {
 		return errors.Wrap(ErrSecretSetInKeycloakclient, client.Spec.Client.ClientID)
 	}
 
-	// verify client secret removal
-	var retrievedSecret v1.Secret
-
 	list, err := ListSecret()
 	for i, item := range list.Items {
 		fmt.Println("secrets found " + strconv.Itoa(i) + " " + item.Name)
@@ -468,17 +464,9 @@ func keycloakClientWithSecretSeedTest() error {
 
 	secretName := "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
 	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
-	err = GetNamespacedSecret(keycloakNamespace, secretName, &retrievedSecret)
+	retrievedSecret, err := GetSecret(secretName)
 	if err != nil {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
-	}
-	secretName = testKeycloakCRName + "-client-secret-" + testKeycloakConfidentialClientCRName
-
-	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
-	err = GetNamespacedSecret(keycloakNamespace, secretName, &retrievedSecret)
-	if err != nil {
-		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
-		return err
 	}
 
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
