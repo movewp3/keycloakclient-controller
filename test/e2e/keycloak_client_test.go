@@ -4,11 +4,10 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/movewp3/keycloakclient-controller/controllers"
 	"reflect"
 	"sort"
 	"strconv"
-
-	"github.com/movewp3/keycloakclient-controller/controllers"
 
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -461,6 +460,12 @@ func keycloakClientWithSecretSeedTest() error {
 
 	// verify client secret removal
 	var retrievedSecret v1.Secret
+
+	list, err := ListSecret()
+	for i, item := range list.Items {
+		fmt.Println("secrets found " + strconv.Itoa(i) + " " + item.Name)
+	}
+
 	secretName := "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
 	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
 	err = GetNamespacedSecret(keycloakNamespace, secretName, &retrievedSecret)
@@ -476,10 +481,6 @@ func keycloakClientWithSecretSeedTest() error {
 		return err
 	}
 
-	list, err := ListSecret()
-	for i, item := range list.Items {
-		fmt.Println("secrets found " + strconv.Itoa(i) + " " + item.Name)
-	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
 
 	fmt.Println("expectedSecret " + expectedSecret)
