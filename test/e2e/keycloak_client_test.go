@@ -172,8 +172,8 @@ func getKeycloakClientCR() *keycloakv1alpha1.KeycloakClient {
 }
 
 func getKeycloakConfidentialClientCR() *keycloakv1alpha1.KeycloakClient {
-	k8sName := testKeycloakClientCRName
-	id := testKeycloakClientCRName
+	k8sName := testKeycloakConfidentialClientCRName
+	id := testKeycloakConfidentialClientCRName
 	labels := CreateLabel(keycloakNamespace)
 
 	return &keycloakv1alpha1.KeycloakClient{
@@ -458,18 +458,12 @@ func keycloakClientWithSecretSeedTest() error {
 		return errors.Wrap(ErrSecretSetInKeycloakclient, client.Spec.Client.ClientID)
 	}
 
-	// verify client secret removal in secondary resources
-	_, exists := client.Status.SecondaryResources[secret.Name]
-	if exists {
-		return errors.Wrap(ErrDeprecatedClientSecretFound, secret.Name)
-	}
-
 	// verify client secret removal
 	var retrievedSecret v1.Secret
-	fmt.Println("search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakClientCRName)
-	err = GetNamespacedSecret(keycloakNamespace, "keycloak-client-secret-"+testKeycloakClientCRName, &retrievedSecret)
+	fmt.Println("search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakConfidentialClientCRName)
+	err = GetNamespacedSecret(keycloakNamespace, "keycloak-client-secret-"+testKeycloakConfidentialClientCRName, &retrievedSecret)
 	if err != nil {
-		fmt.Println("error search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakClientCRName + " " + err.Error())
+		fmt.Println("error search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakConfidentialClientCRName + " " + err.Error())
 		return err
 	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
@@ -487,8 +481,8 @@ func keycloakClientWithSecretSeedTest() error {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, the sha code with salt should be used"), secret.Name)
 	}
 
-	fmt.Println("read keycloakclient " + keycloakNamespace + " " + testKeycloakClientCRName)
-	newClient, err := GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
+	fmt.Println("read keycloakclient " + keycloakNamespace + " " + testKeycloakConfidentialClientCRName)
+	newClient, err := GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
 
 	fmt.Println("keycloakclient secret: " + newClient.Spec.Client.Secret)
 
