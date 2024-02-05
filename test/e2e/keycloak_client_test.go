@@ -474,7 +474,7 @@ func keycloakClientWithSecretSeedTest() error {
 
 	fmt.Println("expectedSecret " + expectedSecret)
 	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
-	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"])))
+	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"]))
 	fmt.Println("retrievedSecret " + string(val))
 
 	if string(retrievedSecret.Data["CLIENT_SECRET"]) != base64.StdEncoding.EncodeToString([]byte(expectedSecret)) {
