@@ -466,7 +466,7 @@ func keycloakClientWithSecretSeedTest() error {
 
 	// verify client secret removal
 	var retrievedSecret v1.Secret
-	err = GetNamespacedSecret(keycloakNamespace, secret.Name, &retrievedSecret)
+	err = GetNamespacedSecret(keycloakNamespace, "keycloak-client-secret-"+testKeycloakClientCRName, &retrievedSecret)
 	if !apierrors.IsNotFound(err) {
 		return err
 	}
@@ -478,7 +478,16 @@ func keycloakClientWithSecretSeedTest() error {
 	fmt.Println("retrievedSecret " + string(val))
 
 	if string(retrievedSecret.Data["CLIENT_SECRET"]) != base64.StdEncoding.EncodeToString([]byte(expectedSecret)) {
-		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, it should not be set"), secret.Name)
+		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, the sha code with salt should be used"), secret.Name)
+	}
+
+	fmt.Println("read keycloakclient " + keycloakNamespace + " " + testKeycloakClientCRName)
+	newClient, err := GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakClientCRName)
+
+	fmt.Println("keycloakclient secret: " + newClient.Spec.Client.Secret)
+
+	if newClient.Spec.Client.Secret != "" {
+		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, created secret should not be stored in the cr keycloakclient"), secret.Name)
 	}
 
 	return nil
