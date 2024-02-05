@@ -440,14 +440,17 @@ func keycloakClientWithSecretSeedTest() error {
 	// create client
 	fmt.Println("create client " + client.Spec.Client.ClientID)
 	client, err = CreateKeycloakClient(client)
-	fmt.Println("create client err" + err.Error())
 
 	if err != nil {
+		fmt.Println("create client err" + err.Error())
 		return err
 	}
+
 	fmt.Println("wait for client " + testKeycloakClientCRName)
 	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
 	if err != nil {
+
+		fmt.Println("wait for client err" + err.Error())
 		return err
 	}
 
