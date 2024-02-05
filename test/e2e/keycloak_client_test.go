@@ -46,6 +46,17 @@ var _ = Describe("KeycloakClient", func() {
 		tearDownKeycloakClients()
 	})
 
+	Describe("keycloakClientWithSecretSeedTest", func() {
+		//XXXXXX
+		BeforeEach(func() {
+			getKeycloakConfidentialClientCR()
+		})
+		It("test client with secret seed", func() {
+			err := keycloakClientWithSecretSeedTest()
+			Expect(err).To(BeNil())
+		})
+	})
+
 	Describe("keycloakClientBasicTest", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientCR()
@@ -110,17 +121,6 @@ var _ = Describe("KeycloakClient", func() {
 	Describe("keycloakClientServiceAccountRealmRolesTest", func() {
 		It("test basic client", func() {
 			err := keycloakClientServiceAccountRealmRolesTest()
-			Expect(err).To(BeNil())
-		})
-	})
-
-	Describe("keycloakClientWithSecretSeedTest", func() {
-		//XXXXXX
-		BeforeEach(func() {
-			getKeycloakConfidentialClientCR()
-		})
-		It("test client with secret seed", func() {
-			err := keycloakClientWithSecretSeedTest()
 			Expect(err).To(BeNil())
 		})
 	})
@@ -466,16 +466,18 @@ func keycloakClientWithSecretSeedTest() error {
 
 	// verify client secret removal
 	var retrievedSecret v1.Secret
+	fmt.Println("search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakClientCRName)
 	err = GetNamespacedSecret(keycloakNamespace, "keycloak-client-secret-"+testKeycloakClientCRName, &retrievedSecret)
-	if !apierrors.IsNotFound(err) {
+	if err != nil {
+		fmt.Println("error search secret  " + keycloakNamespace + " " + "keycloak-client-secret-" + testKeycloakClientCRName + " " + err.Error())
 		return err
 	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
 
 	fmt.Println("expectedSecret " + expectedSecret)
-	fmt.Println("retrievedSecret " + retrievedSecret.Name)
+	fmt.Println("retrievedSecret name " + retrievedSecret.Name)
 	for key, v := range retrievedSecret.Data {
-		fmt.Println("retrievedSecret " + key + " " + string(v))
+		fmt.Println("retrievedSecret data" + key + " " + string(v))
 	}
 	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
 	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"]))
