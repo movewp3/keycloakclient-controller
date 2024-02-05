@@ -446,8 +446,8 @@ func keycloakClientWithSecretSeedTest() error {
 		return err
 	}
 
-	fmt.Println("wait for client " + testKeycloakClientCRName)
-	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakClientCRName)
+	fmt.Println("wait for client " + testKeycloakConfidentialClientCRName)
+	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakConfidentialClientCRName)
 	if err != nil {
 
 		fmt.Println("wait for client err" + err.Error())
