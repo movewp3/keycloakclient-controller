@@ -471,6 +471,12 @@ func keycloakClientWithSecretSeedTest() error {
 		return err
 	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+
+	fmt.Println("expectedSecret " + expectedSecret)
+	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
+	val, err := base64.StdEncoding.DecodeString(string(retrievedSecret.Data["CLIENT_SECRET"])))
+	fmt.Println("retrievedSecret " + string(val))
+
 	if string(retrievedSecret.Data["CLIENT_SECRET"]) != base64.StdEncoding.EncodeToString([]byte(expectedSecret)) {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, it should not be set"), secret.Name)
 	}
