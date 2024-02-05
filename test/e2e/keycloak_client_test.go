@@ -496,6 +496,7 @@ func keycloakClientWithSecretSeedTest() error {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, created secret should not be stored in the cr keycloakclient"), secret.Name)
 	}
 
+	DeleteSecret("credential-keycloak-client-secret-seed")
 	return nil
 }
 

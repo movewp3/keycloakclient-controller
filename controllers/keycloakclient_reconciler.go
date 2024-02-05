@@ -103,7 +103,7 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 	}
 
 	if state.ClientSecret == nil {
-		logKcc.Info("unexpected missing k8s secret")
+		logKcc.Info("k8s secret for client is missing, create it")
 		desired.AddAction(i.getCreatedClientSecretState(state, cr))
 	} else {
 		desired.AddAction(i.getUpdatedClientSecretState(state, cr))
