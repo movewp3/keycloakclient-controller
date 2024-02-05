@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strconv"
 
 	"github.com/movewp3/keycloakclient-controller/controllers"
 
@@ -475,6 +476,10 @@ func keycloakClientWithSecretSeedTest() error {
 		return err
 	}
 
+	list, err := ListSecret()
+	for i, item := range list.Items {
+		fmt.Println("secrets found " + strconv.Itoa(i) + " " + item.Name)
+	}
 	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
 
 	fmt.Println("expectedSecret " + expectedSecret)

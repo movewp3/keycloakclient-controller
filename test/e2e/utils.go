@@ -14,7 +14,6 @@ import (
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned"
-
 	v1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -262,6 +261,10 @@ func DeleteSecret(name string) error {
 func CreateSecret(secret *v1.Secret) error {
 	_, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
 	return err
+}
+func ListSecret() (*v1.SecretList, error) {
+	opts := metav1.ListOptions{}
+	return getClient().CoreV1().Secrets(keycloakNamespace).List(context.Background(), opts)
 }
 
 func GetKeycloak(name string) (*keycloakv1alpha1.Keycloak, error) {
