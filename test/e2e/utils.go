@@ -258,9 +258,9 @@ func CreateKeycloakClient(kcc *keycloakv1alpha1.KeycloakClient) (*keycloakv1alph
 func DeleteSecret(name string) error {
 	return getClient().CoreV1().Secrets(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
 }
-func CreateSecret(secret *v1.Secret) error {
-	_, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
-	return err
+func CreateSecret(secret *v1.Secret) (*v1.Secret, error) {
+	secret, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	return secret, err
 }
 func ListSecret() (*v1.SecretList, error) {
 	opts := metav1.ListOptions{}

@@ -418,7 +418,7 @@ func keycloakClientDeprecatedClientSecretTest() error {
 	secret := model.DeprecatedClientSecret(client)
 
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
-	err := CreateSecret(secret)
+	_, err := CreateSecret(secret)
 	if err != nil {
 		return err
 	}
@@ -452,7 +452,7 @@ func keycloakClientWithSecretSeedTest() error {
 	client := getKeycloakConfidentialClientCR("")
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "credential-keycloak-client-secret-seed",
+			Name:      model.SecretSeedSecretName,
 			Namespace: keycloakNamespace,
 		},
 		StringData: map[string]string{
@@ -461,7 +461,7 @@ func keycloakClientWithSecretSeedTest() error {
 	}
 
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
-	err := CreateSecret(secret)
+	_, err := CreateSecret(secret)
 	if err != nil {
 
 		return err
@@ -526,7 +526,10 @@ func keycloakClientWithSecretSeedTest() error {
 		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, created secret should not be stored in the cr keycloakclient"), secret.Name)
 	}
 
-	DeleteSecret("credential-keycloak-client-secret-seed")
+	err = DeleteSecret("credential-keycloak-client-secret-seed")
+	if err != nil {
+		fmt.Println("error deleting secret " + "credential-keycloak-client-secret-seed")
+	}
 	return nil
 }
 
@@ -534,7 +537,7 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 	client := getKeycloakConfidentialClientCR("")
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "credential-keycloak-client-secret-seed",
+			Name:      model.SecretSeedSecretName,
 			Namespace: keycloakNamespace,
 		},
 		StringData: map[string]string{
@@ -543,7 +546,7 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 	}
 
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
-	err := CreateSecret(secret)
+	_, err := CreateSecret(secret)
 	if err != nil {
 
 		return err
@@ -607,10 +610,14 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 	}
 
 	// change secret and check that is it used
+
+	client, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
+	if err != nil {
+		fmt.Println("Error Getting KeycloakClient")
+	}
 	client.Spec.Client.Secret = "duh"
 	fmt.Println("Update KeycloakClient, set secret to " + keycloakNamespace + " " + secretName + " " + client.Spec.Client.Secret)
-
-	client, err = UpdateKeycloakClient(keycloakNamespace, client)
+	UpdateKeycloakClient(keycloakNamespace, client)
 	if err != nil {
 		fmt.Println("Error Updating KeycloakClient")
 	}
@@ -623,7 +630,10 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 		return errors.Wrap(errors.New("if a keycloakclient secret is set, it has to be reflected in the kubernetes secret"), secret.Name)
 	}
 
-	DeleteSecret("credential-keycloak-client-secret-seed")
+	err = DeleteSecret(model.SecretSeedSecretName)
+	if err != nil {
+		fmt.Println("error deleting secret " + model.SecretSeedSecretName)
+	}
 	return nil
 }
 
@@ -640,7 +650,7 @@ func keycloakClientSecretStaysWhenSecretSettingIsRemovedTest() error {
 	}
 
 	// create client secret using client ID, i.e., keycloak-client-secret-<CLIENT_ID>
-	err := CreateSecret(secret)
+	_, err := CreateSecret(secret)
 	if err != nil {
 
 		return err
@@ -707,11 +717,19 @@ func keycloakClientSecretStaysWhenSecretSettingIsRemovedTest() error {
 
 	// remove secret and check that the existing secret is still be used
 	// if a secret is set in keycloak and in the kubernetes secrect, then this should not be changed if the secret is not set in the keycloakclient
+
+	client, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
+	if err != nil {
+		fmt.Println("Error Getting KeycloakClient")
+	}
 	client.Spec.Client.Secret = ""
 	fmt.Println("Update KeycloakClient, remove secret " + keycloakNamespace + " " + secretName)
-
 	UpdateKeycloakClient(keycloakNamespace, client)
+	if err != nil {
+		fmt.Println("Error Updating KeycloakClient")
+	}
 	time.Sleep(30 * time.Second)
+
 	retrievedSecret, err = GetSecret(secretName)
 	if err != nil {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
@@ -720,7 +738,10 @@ func keycloakClientSecretStaysWhenSecretSettingIsRemovedTest() error {
 		return errors.Wrap(errors.New("if a keycloakclient secret was set, it should not be set otherwise if unset"), secret.Name)
 	}
 
-	DeleteSecret("credential-keycloak-client-secret-seed")
+	err = DeleteSecret(model.SecretSeedSecretName)
+	if err != nil {
+		fmt.Println("error deleting secret " + model.SecretSeedSecretName)
+	}
 	return nil
 }
 
