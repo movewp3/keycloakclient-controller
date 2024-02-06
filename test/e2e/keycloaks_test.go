@@ -127,7 +127,7 @@ func prepareExternalKeycloaksCR() error {
 		Type: v1.SecretTypeOpaque,
 	}
 
-	err = CreateSecret(secret)
+	_, err = CreateSecret(secret)
 	Expect(err).To(BeNil())
 	GinkgoWriter.Printf("secret created\n")
 
