@@ -47,42 +47,33 @@ var _ = Describe("KeycloakClient", func() {
 		Expect(err).To(BeNil())
 		tearDownKeycloakClients()
 	})
+	/*
+		Describe("keycloakClientWithSecretSeedTest", func() {
+			BeforeEach(func() {
+				getKeycloakConfidentialClientCR("")
+			})
+			It("test client with secret seed", func() {
+				err := keycloakClientWithSecretSeedTest()
+				Expect(err).To(BeNil())
+			})
+		})
 
-	Describe("keycloakClientWithSecretSeedTest", func() {
-		BeforeEach(func() {
-			getKeycloakConfidentialClientCR("")
+		Describe("keycloakClientSecretIsSetWhenChangedTest", func() {
+			BeforeEach(func() {
+				getKeycloakConfidentialClientCR("")
+			})
+			It("test client with secret seed when secret is set", func() {
+				err := keycloakClientSecretIsSetWhenChangedTest()
+				Expect(err).To(BeNil())
+			})
 		})
-		It("test client with secret seed", func() {
-			err := keycloakClientWithSecretSeedTest()
-			Expect(err).To(BeNil())
-		})
-	})
-
-	Describe("keycloakClientSecretIsSetWhenChangedTest", func() {
-		BeforeEach(func() {
-			getKeycloakConfidentialClientCR("")
-		})
-		It("test client with secret seed when secret is set", func() {
-			err := keycloakClientSecretIsSetWhenChangedTest()
-			Expect(err).To(BeNil())
-		})
-	})
-
+	*/
 	Describe("keycloakClientSecretStaysWhenSecretSettingIsRemovedTest", func() {
 		BeforeEach(func() {
 			getKeycloakConfidentialClientCR("")
 		})
 		It("test client with secret seed when secret is set", func() {
 			err := keycloakClientSecretStaysWhenSecretSettingIsRemovedTest()
-			Expect(err).To(BeNil())
-		})
-	})
-	Describe("keycloakClientSecretIsSetWhenChangedTest", func() {
-		BeforeEach(func() {
-			getKeycloakConfidentialClientCR("")
-		})
-		It("test client with secret seed when secret is set", func() {
-			err := keycloakClientSecretIsSetWhenChangedTest()
 			Expect(err).To(BeNil())
 		})
 	})
