@@ -820,7 +820,10 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 	fmt.Println("Made AuthenticatedClient")
 	fmt.Println("Delete Client in Keycloak")
 	err = authenticatedClient.DeleteClient(client.Spec.Client.ClientID, realmName)
-	fmt.Println("Deleted Client in Keycloak" + err.Error())
+	fmt.Println("Deleted Client in Keycloak")
+	if err != nil {
+		fmt.Println("Deleted Client in Keycloak" + err.Error())
+	}
 	time.Sleep(30 * time.Second)
 
 	fmt.Println("Update keycloakclient")
