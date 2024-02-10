@@ -92,8 +92,11 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 			}
 		}
 		desired.AddAction(i.getCreatedClientState(state, cr))
-	} else {
+	} else { // keycloakclient already exists in keycloak
 		if cr.Spec.Client.Secret == "" {
+			// at this place the cr has the secret if there was a secret in keycloak, even if nothing was specified in the cr
+			// the secret should stay stable if possible. if a secret was created already, then cont change it.
+			// if it should be changed, then delete the client in keycloak and the controller will create a new one with a secret
 			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
 			if err == nil {
 				cr.Spec.Client.Secret = sha

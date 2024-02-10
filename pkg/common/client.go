@@ -690,6 +690,7 @@ func (c *Client) GetServiceAccountUser(realmName, clientID string) (*v1alpha1.Ke
 
 // login requests a new auth token from Keycloak
 func (c *Client) login_admin(user, pass string) error {
+	logClient.Info("start login with adminuser")
 	form := url.Values{}
 	form.Add("username", user)
 	form.Add("password", pass)
@@ -730,6 +731,7 @@ func (c *Client) login_admin(user, pass string) error {
 	}
 
 	c.token = tokenRes.AccessToken
+	logClient.Info("login with adminuser succeeded")
 
 	return nil
 }

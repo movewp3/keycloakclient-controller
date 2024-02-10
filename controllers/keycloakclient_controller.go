@@ -123,6 +123,7 @@ func (r *KeycloakClientReconciler) Reconcile(ctx context.Context, request ctrl.R
 				instance.Namespace,
 				instance.Name))
 
+			// if keycloak has stored a secret, then this is added to instance here
 			err = clientState.Read(r.context, instance, authenticated, r.Client)
 			if err != nil {
 				logKcc.Error(err, "error reading client state")

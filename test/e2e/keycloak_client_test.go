@@ -438,7 +438,6 @@ func keycloakClientDeprecatedClientSecretTest() error {
 }
 
 func keycloakClientWithSecretSeedTest() error {
-	//XXXXXXXXXXX
 	client := getKeycloakConfidentialClientCR("")
 	secret := &v1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
@@ -716,6 +715,134 @@ func keycloakClientSecretStaysWhenSecretSettingIsRemovedTest() error {
 	err = DeleteSecret(model.SecretSeedSecretName)
 	if err != nil {
 		fmt.Println("error deleting secret " + model.SecretSeedSecretName)
+	}
+	return nil
+}
+
+/*
+this simulates the process, when the keycloakclient crs have been created with a secret
+
+	then the secret has been removed fron cr crs by the keycloakclontroller
+	and then the secret seed is introduced which shouldn´t change anything until the client is
+	deleted in keycloak
+*/
+func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
+	client := getKeycloakConfidentialClientCR("")
+
+	// create client
+	fmt.Println("create client " + client.Spec.Client.ClientID)
+	client, err := CreateKeycloakClient(client)
+
+	if err != nil {
+		fmt.Println("create client err" + err.Error())
+		return err
+	}
+
+	fmt.Println("wait for client " + testKeycloakConfidentialClientCRName)
+	err = WaitForClientToBeReady(keycloakNamespace, testKeycloakConfidentialClientCRName)
+	if err != nil {
+
+		fmt.Println("wait for client err" + err.Error())
+		return err
+	}
+
+	secretName := "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
+	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
+	retrievedSecret, err := GetSecret(secretName)
+	if err != nil {
+		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
+	}
+
+	fmt.Println("retrievedSecret name " + retrievedSecret.Name)
+	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
+	firstSecret := string(retrievedSecret.Data["CLIENT_SECRET"])
+
+	newClient, err := GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
+
+	if newClient.Spec.Client.Secret != "" {
+		return errors.New("if a keycloakclient doesn´t set a secret, nothing should be stored in the keycloakclient cr")
+	}
+
+	seedSecret := &v1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "credential-keycloak-client-secret-seed",
+			Namespace: keycloakNamespace,
+		},
+		StringData: map[string]string{
+			"SECRET_SEED": "aHZ5c0FhcTRTUlFWNGFzddddbnVBSzQ4SnMzZ3hUTEU=,",
+		},
+	}
+
+	_, err = CreateSecret(seedSecret)
+	if err != nil {
+		return err
+	}
+	fmt.Println("secret created: " + seedSecret.ObjectMeta.Name)
+
+	// Change keycloakclientCR to trigger update
+
+	fmt.Println("Update keycloakclient")
+	labels := newClient.ObjectMeta.GetLabels()
+	labels["cwdude"] = "value"
+	newClient.ObjectMeta.SetLabels(labels)
+	UpdateKeycloakClient(keycloakNamespace, newClient)
+	fmt.Println("Updated keycloakclient")
+
+	time.Sleep(30 * time.Second)
+
+	// remove secret and check that the existing secret is still be used
+	// if a secret is set in keycloak and in the kubernetes secrect, then this should not be changed if the secret is not set in the keycloakclient
+
+	fmt.Println("Create Seed")
+	retrievedSecret, err = GetSecret(secretName)
+	if err != nil {
+		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
+	}
+	if string(retrievedSecret.Data["CLIENT_SECRET"]) != firstSecret {
+		return errors.New("if a keycloakclient secret was set in the past, it should not be changed if unset")
+	}
+
+	fmt.Println("Delete Client in Keycloak")
+
+	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
+	authenticatedClient, err := MakeAuthenticatedClient(*keycloakCR)
+	if err != nil {
+		return errors.Wrap(errors.New("cloud not create authenticated client"), err.Error())
+	}
+	authenticatedClient.DeleteClient(client.Spec.Client.ClientID, realmName)
+	fmt.Println("Deleted Client in Keycloak")
+	time.Sleep(30 * time.Second)
+
+	err = DeleteSecret(model.SecretSeedSecretName)
+	if err != nil {
+		fmt.Println("error deleting secret " + model.SecretSeedSecretName)
+	}
+
+	fmt.Println("Update keycloakclient")
+	newClient, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
+	labels = newClient.ObjectMeta.GetLabels()
+	labels["cwdude2"] = "value"
+	newClient.ObjectMeta.SetLabels(labels)
+	UpdateKeycloakClient(keycloakNamespace, newClient)
+	fmt.Println("Updated keycloakclient")
+
+	time.Sleep(30 * time.Second)
+
+	secretName = "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
+	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
+	retrievedSecret, err = GetSecret(secretName)
+	if err != nil {
+		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
+	}
+
+	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+
+	fmt.Println("expectedSecret " + expectedSecret)
+	fmt.Println("retrievedSecret name " + retrievedSecret.Name)
+	fmt.Println("retrievedSecret " + string(retrievedSecret.Data["CLIENT_SECRET"]))
+
+	if string(retrievedSecret.Data["CLIENT_SECRET"]) != expectedSecret {
+		return errors.Wrap(errors.New("if a keycloakclient doesn´t set a secret, the sha code with salt should be used"), secretName)
 	}
 	return nil
 }
