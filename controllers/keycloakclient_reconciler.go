@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/pkg/errors"
@@ -35,14 +37,18 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 	}
 }
 func GetClientShaCode(clientID string) (string, error) {
-	secretSeed, _ := getSecretSeed()
-	if secretSeed != "" {
+	secretSeed, err := getSecretSeed()
+	if err != nil {
+		logKcc.Info("error getting secret seed " + clientID + " from secretSeed")
+	}
+	if secretSeed != "" && err == nil {
 		h := sha256.New()
 		h.Write([]byte(secretSeed + clientID + model.SALT))
 		sha := fmt.Sprintf("%x", h.Sum(nil))
 		logKcc.Info("construct Secret for " + clientID + " from secretSeed")
 		return sha, nil
 	}
+
 	return "", errors.New("No secretSeed")
 }
 
@@ -50,16 +56,22 @@ func GetClientShaCode(clientID string) (string, error) {
 func getSecretSeed() (string, error) {
 	config, err := config2.GetConfig()
 	if err != nil {
+		logKcc.Info("cannot get config " + err.Error())
 		return "", err
 	}
 
 	secretClient, err := kubernetes.NewForConfig(config)
 	if err != nil {
+		logKcc.Info("cannot get kubernetesClient " + err.Error())
 		return "", err
 	}
 
 	secretSeedSecret, err := secretClient.CoreV1().Secrets("keycloak").Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
 	if err != nil {
+
+		if !kubeerrors.IsNotFound(err) {
+			logKcc.Info("error getting secret  " + model.SecretSeedSecretName + " " + err.Error())
+		}
 		return "", errors.Wrap(err, "failed to get the secretSeed")
 	}
 	secretSeed := string(secretSeedSecret.Data[model.KeycloakClientSecretSeed])
