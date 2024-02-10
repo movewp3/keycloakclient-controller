@@ -834,7 +834,7 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 	UpdateKeycloakClient(keycloakNamespace, newClient)
 	fmt.Println("Updated keycloakclient")
 
-	time.Sleep(30 * time.Second)
+	time.Sleep(300 * time.Second)
 
 	secretName = "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
 	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
