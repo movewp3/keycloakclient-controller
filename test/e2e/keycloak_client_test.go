@@ -76,7 +76,15 @@ var _ = Describe("KeycloakClient", func() {
 			Expect(err).To(BeNil())
 		})
 	})
-
+	Describe("keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved", func() {
+		BeforeEach(func() {
+			getKeycloakConfidentialClientCR("")
+		})
+		It("test client with secret seed when secret is set", func() {
+			err := keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved()
+			Expect(err).To(BeNil())
+		})
+	})
 	Describe("keycloakClientBasicTest", func() {
 		BeforeEach(func() {
 			prepareKeycloakClientCR()
