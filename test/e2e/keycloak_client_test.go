@@ -810,13 +810,15 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 		return errors.New("if a keycloakclient secret was set in the past, it should not be changed if unset")
 	}
 
-	fmt.Println("Delete Client in Keycloak")
+	fmt.Println("Make AuthenticatedClient")
 
 	keycloakCR, err := getDeployedKeycloakCR(keycloakNamespace)
 	authenticatedClient, err := MakeAuthenticatedClient(*keycloakCR)
 	if err != nil {
 		return errors.Wrap(errors.New("cloud not create authenticated client"), err.Error())
 	}
+	fmt.Println("Made AuthenticatedClient")
+	fmt.Println("Delete Client in Keycloak")
 	err = authenticatedClient.DeleteClient(client.Spec.Client.ClientID, realmName)
 	fmt.Println("Deleted Client in Keycloak" + err.Error())
 	time.Sleep(30 * time.Second)
@@ -831,7 +833,7 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 	UpdateKeycloakClient(keycloakNamespace, newClient)
 	fmt.Println("Updated keycloakclient")
 
-	time.Sleep(300 * time.Second)
+	time.Sleep(30 * time.Second)
 
 	secretName = "keycloak-client-secret-" + testKeycloakConfidentialClientCRName
 	fmt.Println("search secret  " + keycloakNamespace + " " + secretName)
