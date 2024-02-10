@@ -817,17 +817,14 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 	if err != nil {
 		return errors.Wrap(errors.New("cloud not create authenticated client"), err.Error())
 	}
-	authenticatedClient.DeleteClient(client.Spec.Client.ClientID, realmName)
-	fmt.Println("Deleted Client in Keycloak")
+	err = authenticatedClient.DeleteClient(client.Spec.Client.ClientID, realmName)
+	fmt.Println("Deleted Client in Keycloak" + err.Error())
 	time.Sleep(30 * time.Second)
-
-	err = DeleteSecret(model.SecretSeedSecretName)
-	if err != nil {
-		fmt.Println("error deleting secret " + model.SecretSeedSecretName)
-	}
 
 	fmt.Println("Update keycloakclient")
 	newClient, err = GetNamespacedKeycloakClient(keycloakNamespace, testKeycloakConfidentialClientCRName)
+	fmt.Println("secret in keycloakclient" + newClient.Spec.Client.Secret)
+	newClient.Spec.Client.Secret = ""
 	labels = newClient.ObjectMeta.GetLabels()
 	labels["cwdude2"] = "value"
 	newClient.ObjectMeta.SetLabels(labels)
