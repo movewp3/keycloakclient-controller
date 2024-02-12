@@ -499,7 +499,10 @@ func keycloakClientWithSecretSeedTest() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	if err != nil {
+		fmt.Println("error getting sha code " + err.Error())
+	}
 
 	fmt.Println("expectedSecret " + expectedSecret)
 	fmt.Println("retrievedSecret name " + retrievedSecret.Name)
@@ -584,7 +587,10 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	if err != nil {
+		fmt.Println("error getting sha code " + err.Error())
+	}
 
 	fmt.Println("expectedSecret " + expectedSecret)
 	fmt.Println("retrievedSecret name " + retrievedSecret.Name)
@@ -845,7 +851,10 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, _ := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	if err != nil {
+		fmt.Println("error getting sha code " + err.Error())
+	}
 
 	fmt.Println("expectedSecret " + expectedSecret)
 	fmt.Println("retrievedSecret name " + retrievedSecret.Name)

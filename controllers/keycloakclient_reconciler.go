@@ -38,18 +38,15 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 }
 func GetClientShaCode(clientID string) (string, error) {
 	secretSeed, err := getSecretSeed()
-	if err != nil {
+	if secretSeed == "" || err != nil {
 		logKcc.Info("error getting secret seed " + clientID + " from secretSeed")
+		return "", errors.New("No secretSeed")
 	}
-	if secretSeed != "" && err == nil {
-		h := sha256.New()
-		h.Write([]byte(secretSeed + clientID + model.SALT))
-		sha := fmt.Sprintf("%x", h.Sum(nil))
-		logKcc.Info("construct Secret for " + clientID + " from secretSeed")
-		return sha, nil
-	}
-
-	return "", errors.New("No secretSeed")
+	h := sha256.New()
+	h.Write([]byte(secretSeed + clientID + model.SALT))
+	sha := fmt.Sprintf("%x", h.Sum(nil))
+	logKcc.Info("construct Secret for " + clientID + " from secretSeed")
+	return sha, nil
 }
 
 // AuthenticatedClient returns an authenticated client for requesting endpoints from the Keycloak api
@@ -75,6 +72,9 @@ func getSecretSeed() (string, error) {
 		return "", errors.Wrap(err, "failed to get the secretSeed")
 	}
 	secretSeed := string(secretSeedSecret.Data[model.KeycloakClientSecretSeed])
+	if secretSeed == "" {
+		return "", errors.Wrap(err, "failed to get the secretSeed")
+	}
 
 	return secretSeed, nil
 }
