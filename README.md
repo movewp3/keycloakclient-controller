@@ -4,7 +4,22 @@
 # keycloakclient-controller
 The keycloakclient-controller **manages keycloak clients in independent keycloak installations**. 
 
-To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-CustomResource** is created, and the keycloakclient-controller sees to creating, changing, deleting the KeycloakClient as specified with the CustomResource.
+A basic configuration for the keycloakcontroller consists of 
+* a keycloak-cr with the url of the keycloak, where clients should be managed
+* a keycloakrealm cr with the realm-name, in which clients should be managed (and a selector of the keycloak-cr of this realm)
+* a keycloakclient-cr with the client specific setting (which are quite a few) and a selector of the realm of this client
+* for each keycloak-cr a secret "credential-<keycloak-cr.name> that contains the following data
+  * ADMIN_PASSWORD: if the controller logs in via admin-consile and grant_type password, not recommended
+  * ADMIN_USERNAME: 
+  * KEYCLOAKCLIENT_CONTROLLER_NAME: if the controller logs in via a special service account and grant_type client_credentials, recommended 
+  * KEYCLOAKCLIENT_CONTROLLER_PASSWORD:
+  
+* optional secret credential-keycloak-client-secret-seed in namespace des controllers
+  * SECRET_SEED if the secret for each client should be created via a sha code of (secret-seed + client-name). This is sometimes necessary if a controller should be running in twho separate k8s clusters.
+
+
+
+To create a KeycloakClient in a Keycloak Installation, a **KeycloakClient-CustomResource** is created, and the keycloakclient-controller sees to creating, changing, deleting the KeycloakClient as specified with the CustomResource (and the referenced keycloakrealm-cr and keycloak-cr)
 
 
 ## Description

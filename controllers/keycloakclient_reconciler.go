@@ -6,6 +6,8 @@ import (
 	"crypto/sha256"
 	"fmt"
 
+	"github.com/movewp3/keycloakclient-controller/pkg/k8sutil"
+
 	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
 
 	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -63,7 +65,11 @@ func getSecretSeed() (string, error) {
 		return "", err
 	}
 
-	secretSeedSecret, err := secretClient.CoreV1().Secrets("keycloak").Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
+	controllerNamespace, err := k8sutil.GetControllerNamespace()
+	if err != nil {
+		controllerNamespace = model.DEFAULT_CONTROLLER_NAMESPACE
+	}
+	secretSeedSecret, err := secretClient.CoreV1().Secrets(controllerNamespace).Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
 	if err != nil {
 
 		if !kubeerrors.IsNotFound(err) {
