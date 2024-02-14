@@ -3,7 +3,7 @@ package model
 // Constants for a community Keycloak installation
 const (
 	ApplicationName                  = "keycloak"
-	DEFAULT_CONTROLLER_NAMESPACE     = "keycloak"
+	DefaultControllerNamespace       = "keycloak"
 	AdminUsernameProperty            = "ADMIN_USERNAME"
 	AdminPasswordProperty            = "ADMIN_PASSWORD"
 	ClientName                       = "KEYCLOAKCLIENT_CONTROLLER_NAME"

@@ -67,7 +67,7 @@ func getSecretSeed() (string, error) {
 
 	controllerNamespace, err := k8sutil.GetControllerNamespace()
 	if err != nil {
-		controllerNamespace = model.DEFAULT_CONTROLLER_NAMESPACE
+		controllerNamespace = model.DefaultControllerNamespace
 	}
 	secretSeedSecret, err := secretClient.CoreV1().Secrets(controllerNamespace).Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
 	if err != nil {
