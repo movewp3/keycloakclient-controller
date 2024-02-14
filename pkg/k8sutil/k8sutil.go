@@ -5,10 +5,6 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
-
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/runtime/schema"
-	"k8s.io/client-go/discovery"
 )
 
 // GetWatchNamespace returns the Namespace the operator should be watching for changes
@@ -37,7 +33,7 @@ var ErrRunLocal = fmt.Errorf("operator run mode forced to local")
 var ErrWatchNamespaceEnvVar = fmt.Errorf("watch namespace env var must be set")
 
 // GetOperatorNamespace returns the namespace the operator should be running in.
-func GetOperatorNamespace() (string, error) {
+func GetControllerNamespace() (string, error) {
 	if isRunModeLocal() {
 		return "", ErrRunLocal
 	}
@@ -50,25 +46,6 @@ func GetOperatorNamespace() (string, error) {
 	}
 	ns := strings.TrimSpace(string(nsBytes))
 	return ns, nil
-}
-
-// GetGVKsFromAddToScheme takes in the runtime scheme and filters out all generic apimachinery meta types.
-// It returns just the GVK specific to this scheme.
-func GetGVKsFromAddToScheme(addToSchemeFunc func(*runtime.Scheme) error) ([]schema.GroupVersionKind, error) {
-	s := runtime.NewScheme()
-	err := addToSchemeFunc(s)
-	if err != nil {
-		return nil, err
-	}
-	schemeAllKnownTypes := s.AllKnownTypes()
-	ownGVKs := []schema.GroupVersionKind{}
-	for gvk := range schemeAllKnownTypes {
-		if !isKubeMetaKind(gvk.Kind) {
-			ownGVKs = append(ownGVKs, gvk)
-		}
-	}
-
-	return ownGVKs, nil
 }
 
 func isRunModeLocal() bool {
@@ -104,23 +81,4 @@ func isKubeMetaKind(kind string) bool {
 	}
 
 	return false
-}
-
-// ResourceExists returns true if the given resource kind exists
-// in the given api groupversion
-func ResourceExists(dc discovery.DiscoveryInterface, apiGroupVersion, kind string) (bool, error) {
-	_, apiLists, err := dc.ServerGroupsAndResources()
-	if err != nil {
-		return false, err
-	}
-	for _, apiList := range apiLists {
-		if apiList.GroupVersion == apiGroupVersion {
-			for _, r := range apiList.APIResources {
-				if r.Kind == kind {
-					return true, nil
-				}
-			}
-		}
-	}
-	return false, nil
 }

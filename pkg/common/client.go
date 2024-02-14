@@ -93,8 +93,8 @@ func (c *Client) CreateRealm(realm *v1alpha1.KeycloakRealm) (string, error) {
 	return c.create(realm.Spec.Realm, "realms", "realm")
 }
 
-func (c *Client) CreateClient(client *v1alpha1.KeycloakAPIClient, realmName string) (string, error) {
-	return c.create(client, fmt.Sprintf("realms/%s/clients", realmName), "client")
+func (c *Client) CreateClient(specClient *v1alpha1.KeycloakAPIClient, realmName string) (string, error) {
+	return c.create(specClient, fmt.Sprintf("realms/%s/clients", realmName), "client")
 }
 
 func (c *Client) CreateClientRole(clientID string, role *v1alpha1.RoleRepresentation, realmName string) (string, error) {
@@ -689,7 +689,8 @@ func (c *Client) GetServiceAccountUser(realmName, clientID string) (*v1alpha1.Ke
 }
 
 // login requests a new auth token from Keycloak
-func (c *Client) login_old(user, pass string) error {
+func (c *Client) login_admin(user, pass string) error {
+	logClient.Info("start login with adminuser")
 	form := url.Values{}
 	form.Add("username", user)
 	form.Add("password", pass)
@@ -730,6 +731,7 @@ func (c *Client) login_old(user, pass string) error {
 	}
 
 	c.token = tokenRes.AccessToken
+	logClient.Info("login with adminuser succeeded")
 
 	return nil
 }
@@ -771,7 +773,7 @@ func (c *Client) login(client, credential string) error {
 	}
 
 	if tokenRes.Error != "" {
-		logClient.Error(errors.New(tokenRes.Error), "error with request: %s", tokenRes.ErrorDescription)
+		logClient.Error(errors.New(tokenRes.Error), fmt.Sprintf("error with request: %s", tokenRes.ErrorDescription))
 		return errors.Errorf(tokenRes.ErrorDescription)
 	}
 
@@ -930,15 +932,16 @@ func (i *LocalConfigKeycloakFactory) AuthenticatedClient(kc v1alpha1.Keycloak, i
 		URL:       kcURL,
 		requester: requester,
 	}
+
 	if clientName != "" && clientCredential != "" {
-		client.login(clientName, clientCredential)
-		if err := client.login_old(user, pass); err != nil {
-			if err := client.login_old(user, pass); err != nil {
+		err := client.login(clientName, clientCredential)
+		if err != nil {
+			if err := client.login_admin(user, pass); err != nil {
 				return nil, err
 			}
 		}
 	} else {
-		if err := client.login_old(user, pass); err != nil {
+		if err := client.login_admin(user, pass); err != nil {
 			return nil, err
 		}
 	}

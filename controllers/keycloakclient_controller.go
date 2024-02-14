@@ -123,6 +123,7 @@ func (r *KeycloakClientReconciler) Reconcile(ctx context.Context, request ctrl.R
 				instance.Namespace,
 				instance.Name))
 
+			// if keycloak has stored a secret, then this is added to instance here
 			err = clientState.Read(r.context, instance, authenticated, r.Client)
 			if err != nil {
 				logKcc.Error(err, "error reading client state")
@@ -184,14 +185,6 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 		logKcc.Error(err, "unable to update status")
 	}
 
-	if client.Spec.Client.Secret != "" {
-		client.Spec.Client.Secret = ""
-		err := r.Client.Update(r.context, client)
-		if err != nil {
-			logKcc.Error(err, "unable to remove secret from keycloakclient"+client.Spec.Client.Name)
-		}
-	}
-
 	// Finalizer already set?
 	finalizerExists := false
 	for _, finalizer := range client.Finalizers {
@@ -212,7 +205,10 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 		logKcc.Info(fmt.Sprintf("added finalizer to keycloak client %v/%v",
 			client.Namespace,
 			client.Spec.Client.ClientID))
-
+		sha, err := GetClientShaCode(client.Spec.Client.ClientID)
+		if err == nil && client.Spec.Client.Secret == sha {
+			client.Spec.Client.Secret = ""
+		}
 		return r.Client.Update(r.context, client)
 	}
 

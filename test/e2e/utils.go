@@ -14,7 +14,6 @@ import (
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/client/clientset/versioned"
-
 	v1 "k8s.io/api/core/v1"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -259,18 +258,23 @@ func CreateKeycloakClient(kcc *keycloakv1alpha1.KeycloakClient) (*keycloakv1alph
 func DeleteSecret(name string) error {
 	return getClient().CoreV1().Secrets(keycloakNamespace).Delete(context.Background(), name, metav1.DeleteOptions{})
 }
-func CreateSecret(secret *v1.Secret) error {
-	_, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
-	return err
+func CreateSecret(secret *v1.Secret) (*v1.Secret, error) {
+	secret, err := getClient().CoreV1().Secrets(keycloakNamespace).Create(context.Background(), secret, metav1.CreateOptions{})
+	return secret, err
+}
+func ListSecret() (*v1.SecretList, error) {
+	opts := metav1.ListOptions{}
+	return getClient().CoreV1().Secrets(keycloakNamespace).List(context.Background(), opts)
 }
 
 func GetKeycloak(name string) (*keycloakv1alpha1.Keycloak, error) {
 	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(keycloakNamespace).Get(context.Background(), name, metav1.GetOptions{})
 }
 
-func GetNamespacedSecret(namespace string, objectName string, outputObject *v1.Secret) error {
-	return getClient().RESTClient().Get().Namespace(namespace).Resource("Secret").Name(objectName).Do(context.Background()).Into(outputObject)
+func GetSecret(objectName string) (*v1.Secret, error) {
+	return getClient().CoreV1().Secrets(keycloakNamespace).Get(context.Background(), objectName, metav1.GetOptions{})
 }
+
 func GetNamespacedKeycloak(namespace string, name string) (*keycloakv1alpha1.Keycloak, error) {
 	return getKeycloakApiClient().KeycloakV1alpha1().Keycloaks(namespace).Get(context.Background(), name, metav1.GetOptions{})
 }

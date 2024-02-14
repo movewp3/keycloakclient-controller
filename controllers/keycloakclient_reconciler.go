@@ -2,7 +2,19 @@ package controllers
 
 import (
 	"bytes"
+	"context"
+	"crypto/sha256"
 	"fmt"
+
+	"github.com/movewp3/keycloakclient-controller/pkg/k8sutil"
+
+	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
+
+	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/pkg/errors"
+	"k8s.io/client-go/kubernetes"
+	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -26,6 +38,52 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 		Keycloak: keycloak,
 	}
 }
+func GetClientShaCode(clientID string) (string, error) {
+	secretSeed, err := getSecretSeed()
+	if secretSeed == "" || err != nil {
+		logKcc.Info("error getting secret seed " + clientID + " from secretSeed")
+		return "", errors.New("No secretSeed")
+	}
+	h := sha256.New()
+	h.Write([]byte(secretSeed + clientID + model.SALT))
+	sha := fmt.Sprintf("%x", h.Sum(nil))
+	logKcc.Info("construct Secret for " + clientID + " from secretSeed")
+	return sha, nil
+}
+
+// AuthenticatedClient returns an authenticated client for requesting endpoints from the Keycloak api
+func getSecretSeed() (string, error) {
+	config, err := config2.GetConfig()
+	if err != nil {
+		logKcc.Info("cannot get config " + err.Error())
+		return "", err
+	}
+
+	secretClient, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		logKcc.Info("cannot get kubernetesClient " + err.Error())
+		return "", err
+	}
+
+	controllerNamespace, err := k8sutil.GetControllerNamespace()
+	if err != nil {
+		controllerNamespace = model.DefaultControllerNamespace
+	}
+	secretSeedSecret, err := secretClient.CoreV1().Secrets(controllerNamespace).Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
+	if err != nil {
+
+		if !kubeerrors.IsNotFound(err) {
+			logKcc.Info("error getting secret  " + model.SecretSeedSecretName + " " + err.Error())
+		}
+		return "", errors.Wrap(err, "failed to get the secretSeed")
+	}
+	secretSeed := string(secretSeedSecret.Data[model.KeycloakClientSecretSeed])
+	if secretSeed == "" {
+		return "", errors.Wrap(err, "failed to get the secretSeed")
+	}
+
+	return secretSeed, nil
+}
 
 func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientState, cr *kc.KeycloakClient) common.DesiredClusterState {
 	desired := common.DesiredClusterState{}
@@ -36,28 +94,37 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 		return desired
 	}
 
-	if state.Client == nil {
+	if state.Client == nil { // no configuration of a keycloakclient in keycloak
 		if cr.Spec.Client.Secret == "" {
-			if state.ClientSecret != nil {
-				if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
-					logKcc.Info("reconstruct Secret for " + cr.Spec.Client.ID)
-					cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+
+			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			if err == nil {
+				cr.Spec.Client.Secret = sha
+			} else {
+				if state.ClientSecret != nil {
+					if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
+						logKcc.Info("reconstruct Secret for " + cr.Spec.Client.ID)
+						cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+					}
 				}
 			}
 		}
 		desired.AddAction(i.getCreatedClientState(state, cr))
-	} else {
-		if state.ClientSecret != nil {
-			if !bytes.Equal(state.ClientSecret.Data["CLIENT_SECRET"], []byte("")) {
-				logKcc.Info("use secret from k8s secret " + state.ClientSecret.ObjectMeta.Name)
-				cr.Spec.Client.Secret = string(state.ClientSecret.Data["CLIENT_SECRET"])
+	} else { // keycloakclient already exists in keycloak
+		if cr.Spec.Client.Secret == "" {
+			// at this place the cr has the secret if there was a secret in keycloak, even if nothing was specified in the cr
+			// the secret should stay stable if possible. if a secret was created already, then cont change it.
+			// if it should be changed, then delete the client in keycloak and the controller will create a new one with a secret
+			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			if err == nil {
+				cr.Spec.Client.Secret = sha
 			}
 		}
 		desired.AddAction(i.getUpdatedClientState(state, cr))
 	}
 
 	if state.ClientSecret == nil {
-		logKcc.Info("unexpected missing k8s secret")
+		logKcc.Info("k8s secret for client is missing, create it for " + cr.Spec.Client.ClientID)
 		desired.AddAction(i.getCreatedClientSecretState(state, cr))
 	} else {
 		desired.AddAction(i.getUpdatedClientSecretState(state, cr))
