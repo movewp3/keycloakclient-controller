@@ -2,23 +2,12 @@ package controllers
 
 import (
 	"bytes"
-	"context"
-	"crypto/sha256"
 	"fmt"
-
-	"github.com/movewp3/keycloakclient-controller/pkg/k8sutil"
-
-	kubeerrors "k8s.io/apimachinery/pkg/api/errors"
-
-	v12 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	"github.com/pkg/errors"
-	"k8s.io/client-go/kubernetes"
-	config2 "sigs.k8s.io/controller-runtime/pkg/client/config"
 
 	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"github.com/movewp3/keycloakclient-controller/pkg/model"
+	"github.com/movewp3/keycloakclient-controller/pkg/util"
 )
 
 const (
@@ -38,52 +27,6 @@ func NewDedicatedKeycloakClientReconciler(keycloak kc.Keycloak) *DedicatedKeyclo
 		Keycloak: keycloak,
 	}
 }
-func GetClientShaCode(clientID string) (string, error) {
-	secretSeed, err := getSecretSeed()
-	if secretSeed == "" || err != nil {
-		logKcc.Info("error getting secret seed " + clientID + " from secretSeed")
-		return "", errors.New("No secretSeed")
-	}
-	h := sha256.New()
-	h.Write([]byte(secretSeed + clientID + model.SALT))
-	sha := fmt.Sprintf("%x", h.Sum(nil))
-	logKcc.Info("construct Secret for " + clientID + " from secretSeed")
-	return sha, nil
-}
-
-// AuthenticatedClient returns an authenticated client for requesting endpoints from the Keycloak api
-func getSecretSeed() (string, error) {
-	config, err := config2.GetConfig()
-	if err != nil {
-		logKcc.Info("cannot get config " + err.Error())
-		return "", err
-	}
-
-	secretClient, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		logKcc.Info("cannot get kubernetesClient " + err.Error())
-		return "", err
-	}
-
-	controllerNamespace, err := k8sutil.GetControllerNamespace()
-	if err != nil {
-		controllerNamespace = model.DefaultControllerNamespace
-	}
-	secretSeedSecret, err := secretClient.CoreV1().Secrets(controllerNamespace).Get(context.TODO(), model.SecretSeedSecretName, v12.GetOptions{})
-	if err != nil {
-
-		if !kubeerrors.IsNotFound(err) {
-			logKcc.Info("error getting secret  " + model.SecretSeedSecretName + " " + err.Error())
-		}
-		return "", errors.Wrap(err, "failed to get the secretSeed")
-	}
-	secretSeed := string(secretSeedSecret.Data[model.KeycloakClientSecretSeed])
-	if secretSeed == "" {
-		return "", errors.Wrap(err, "failed to get the secretSeed")
-	}
-
-	return secretSeed, nil
-}
 
 func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientState, cr *kc.KeycloakClient) common.DesiredClusterState {
 	desired := common.DesiredClusterState{}
@@ -97,7 +40,7 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 	if state.Client == nil { // no configuration of a keycloakclient in keycloak
 		if cr.Spec.Client.Secret == "" {
 
-			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			sha, err := util.GetClientShaCode(cr.Spec.Client.ClientID)
 			if err == nil {
 				cr.Spec.Client.Secret = sha
 			} else {
@@ -115,7 +58,7 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileIt(state *common.ClientStat
 			// at this place the cr has the secret if there was a secret in keycloak, even if nothing was specified in the cr
 			// the secret should stay stable if possible. if a secret was created already, then cont change it.
 			// if it should be changed, then delete the client in keycloak and the controller will create a new one with a secret
-			sha, err := GetClientShaCode(cr.Spec.Client.ClientID)
+			sha, err := util.GetClientShaCode(cr.Spec.Client.ClientID)
 			if err == nil {
 				cr.Spec.Client.Secret = sha
 			}

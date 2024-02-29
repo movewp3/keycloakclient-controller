@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/movewp3/keycloakclient-controller/controllers"
+	"github.com/movewp3/keycloakclient-controller/pkg/util"
 
 	keycloakv1alpha1 "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -499,7 +499,7 @@ func keycloakClientWithSecretSeedTest() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := util.GetClientShaCode(client.Spec.Client.ClientID)
 	if err != nil {
 		fmt.Println("error getting sha code " + err.Error())
 	}
@@ -587,7 +587,7 @@ func keycloakClientSecretIsSetWhenChangedTest() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := util.GetClientShaCode(client.Spec.Client.ClientID)
 	if err != nil {
 		fmt.Println("error getting sha code " + err.Error())
 	}
@@ -851,7 +851,7 @@ func keycloakClientSecretUpdatesToSecretSeedWhenClientIsRemoved() error {
 		fmt.Println("error search secret  " + keycloakNamespace + " " + secretName + " " + err.Error())
 	}
 
-	expectedSecret, err := controllers.GetClientShaCode(client.Spec.Client.ClientID)
+	expectedSecret, err := util.GetClientShaCode(client.Spec.Client.ClientID)
 	if err != nil {
 		fmt.Println("error getting sha code " + err.Error())
 	}

@@ -21,6 +21,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/movewp3/keycloakclient-controller/pkg/util"
+
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
@@ -138,6 +140,15 @@ func (r *KeycloakClientReconciler) Reconcile(ctx context.Context, request ctrl.R
 
 			// Run all actions to keep the realms updated
 			err = actionRunner.RunAll(desiredState)
+
+			sha, errsha := util.GetClientShaCode(instance.Spec.Client.ClientID)
+			if errsha == nil && sha == instance.Spec.Client.Secret {
+				instance.Spec.Client.Secret = ""
+
+				logKcc.Info(fmt.Sprintf("Removed sha code secret from keycloakclient %v",
+					instance.Name))
+			}
+
 			if err != nil {
 				logKcc.Error(err, "error in actionRunner")
 
@@ -177,6 +188,7 @@ func (r *KeycloakClientReconciler) adjustCrDefaults(cr *kc.KeycloakClient) {
 }
 
 func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, deleted bool) error {
+
 	client.Status.Ready = true
 	client.Status.Message = ""
 	client.Status.Phase = v1alpha1.PhaseReconciling
@@ -196,6 +208,12 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 
 	// Resource created and finalizer exists: nothing to do
 	if !deleted && finalizerExists {
+		sha, err := util.GetClientShaCode(client.Spec.Client.ClientID)
+		if err == nil && client.Spec.Client.Secret == sha {
+			logKcc.Info(fmt.Sprintf("UNEXPECTED keycloak client with sha code secret %v/%v",
+				client.Namespace,
+				client.Spec.Client.ClientID))
+		}
 		return nil
 	}
 
@@ -205,10 +223,13 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 		logKcc.Info(fmt.Sprintf("added finalizer to keycloak client %v/%v",
 			client.Namespace,
 			client.Spec.Client.ClientID))
-		sha, err := GetClientShaCode(client.Spec.Client.ClientID)
+		sha, err := util.GetClientShaCode(client.Spec.Client.ClientID)
 		if err == nil && client.Spec.Client.Secret == sha {
 			client.Spec.Client.Secret = ""
 		}
+		logKcc.Info(fmt.Sprintf("update keycloak client %v/%v",
+			client.Namespace,
+			client.Spec.Client.ClientID))
 		return r.Client.Update(r.context, client)
 	}
 
@@ -226,17 +247,25 @@ func (r *KeycloakClientReconciler) manageSuccess(client *kc.KeycloakClient, dele
 	}
 
 	client.Finalizers = newFinalizers
+
+	sha, err := util.GetClientShaCode(client.Spec.Client.ClientID)
+	if err == nil && client.Spec.Client.Secret == sha {
+		client.Spec.Client.Secret = ""
+	}
 	return r.Client.Update(r.context, client)
 }
 
-func (r *KeycloakClientReconciler) ManageError(realm *kc.KeycloakClient, issue error) (reconcile.Result, error) {
-	r.recorder.Event(realm, "Warning", "ProcessingError", issue.Error())
+func (r *KeycloakClientReconciler) ManageError(kcc *kc.KeycloakClient, issue error) (reconcile.Result, error) {
+	r.recorder.Event(kcc, "Warning", "ProcessingError", issue.Error())
 
-	realm.Status.Message = issue.Error()
-	realm.Status.Ready = false
-	realm.Status.Phase = v1alpha1.PhaseFailing
+	logKcc.Info(fmt.Sprintf("Manage Error keycloak client with sha code secret %v",
+		kcc.Name))
 
-	err := r.Client.Status().Update(r.context, realm)
+	kcc.Status.Message = issue.Error()
+	kcc.Status.Ready = false
+	kcc.Status.Phase = v1alpha1.PhaseFailing
+
+	err := r.Client.Status().Update(r.context, kcc)
 	if err != nil {
 		logKcc.Error(err, "unable to update status")
 	}
