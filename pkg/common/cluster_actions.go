@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
+	"github.com/movewp3/keycloakclient-controller/pkg/util"
 	"github.com/pkg/errors"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -141,6 +142,17 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 
 	if err == nil {
 		obj.Spec.Client.ID = uid
+		//  keycloak CR is updated here with uid
+		log.Info(fmt.Sprintf("Update K8S Keycloakclient %v",
+			obj.Name))
+
+		// if secret was generated via seed secret, then dont store it
+		sha, errsha := util.GetClientShaCode(obj.Spec.Client.ClientID)
+		if errsha == nil && sha == obj.Spec.Client.Secret {
+			obj.Spec.Client.Secret = ""
+			log.Info(fmt.Sprintf("Removed secret (generated from secretSeed) from keycloak client %v",
+				obj.Name))
+		}
 
 		return i.client.Update(i.context, obj)
 	}
