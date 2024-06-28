@@ -16,6 +16,10 @@ A basic configuration for the keycloakcontroller consists of
   
 * optional secret credential-keycloak-client-secret-seed in namespace des controllers
   * SECRET_SEED if the secret for each client should be created via a sha code of (secret-seed + client-name). This is sometimes necessary if a controller should be running in twho separate k8s clusters.
+* optional defaultClientScope for public KeycloakClients. For KeycloakClients, the defaultClientScopes are configured in the KeycloakClient CustomResource.
+If a certain defaultClientScope is needed in every KeycloakClient, e.g. the Scope "Nonce" for alle the public KeycloakClients, then this can be configured with the environment Variable ADDITIONAL_DEFAULT_CLIENT_SCOPE and in the case the value "Nonce".
+
+
 
 
 
