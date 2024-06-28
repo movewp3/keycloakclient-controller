@@ -3,11 +3,13 @@ package controllers
 import (
 	"bytes"
 	"fmt"
+	"os"
 
 	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
 	"github.com/movewp3/keycloakclient-controller/pkg/model"
 	"github.com/movewp3/keycloakclient-controller/pkg/util"
+	"k8s.io/utils/strings/slices"
 )
 
 const (
@@ -169,8 +171,36 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileScopeMappings(state *common
 	}
 }
 
+func getAdditionalDefaultClientScope() string {
+	additionalDefaultClientScope, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPE")
+	if !found {
+		return ""
+	}
+	return additionalDefaultClientScope
+}
+
 func (i *DedicatedKeycloakClientReconciler) ReconcileClientScopes(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
-	defaultClientScopes := model.FilterClientScopesByNames(state.AvailableClientScopes, cr.Spec.Client.DefaultClientScopes)
+
+	logKcc.Info(fmt.Sprintf("ReconcileClientScopes %s", cr.Spec.Client.Name))
+
+	oldClientScopes := []string{}
+	//addedDefaultClientScope := false
+
+	additionalDefaultClientScopes := cr.Spec.Client.DefaultClientScopes
+	if getAdditionalDefaultClientScope() != "" && !slices.Contains(cr.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope()) && cr.Spec.Client.PublicClient {
+		logKcc.Info(fmt.Sprintf("Add default client scope %v",
+			getAdditionalDefaultClientScope()))
+
+		oldClientScopes = cr.Spec.Client.DefaultClientScopes
+		//addedDefaultClientScope = true
+		additionalDefaultClientScopes = append(cr.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope())
+
+		defer func() {
+			cr.Spec.Client.DefaultClientScopes = oldClientScopes
+		}()
+	}
+
+	defaultClientScopes := model.FilterClientScopesByNames(state.AvailableClientScopes, additionalDefaultClientScopes)
 
 	defaultClientScopesNew, _ := model.ClientScopeDifferenceIntersection(defaultClientScopes, state.DefaultClientScopes)
 	for _, clientScope := range defaultClientScopesNew {
@@ -449,6 +479,7 @@ func (i *DedicatedKeycloakClientReconciler) getDeletedClientClientScopeMappingsS
 }
 
 func (i *DedicatedKeycloakClientReconciler) getCreatedClientDefaultClientScopeState(state *common.ClientState, cr *kc.KeycloakClient, clientScope *kc.KeycloakClientScope) common.ClusterAction {
+
 	return common.UpdateClientDefaultClientScopeAction{
 		ClientScope: clientScope,
 		Ref:         cr,

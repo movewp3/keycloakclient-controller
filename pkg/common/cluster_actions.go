@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 	"fmt"
+	"os"
+	"slices"
 
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/util"
@@ -133,9 +135,36 @@ func (i *ClusterActionRunner) CreateRealm(obj *v1alpha1.KeycloakRealm) error {
 	return err
 }
 
+func getAdditionalDefaultClientScope() string {
+
+	additionalDefaultClientScope, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPE")
+	if !found {
+		return ""
+	}
+	return additionalDefaultClientScope
+}
+
 func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm string) error {
+
 	if i.keycloakClient == nil {
 		return errors.Errorf("cannot perform client create when client is nil")
+	}
+
+	oldClientScopes := []string{}
+	addedDefaultClientScope := false
+
+	if getAdditionalDefaultClientScope() != "" && !slices.Contains(obj.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope()) && obj.Spec.Client.PublicClient {
+		log.Info(fmt.Sprintf("Add default client scope %v",
+			getAdditionalDefaultClientScope()))
+
+		oldClientScopes = obj.Spec.Client.DefaultClientScopes
+		addedDefaultClientScope = true
+		obj.Spec.Client.DefaultClientScopes = append(obj.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope())
+
+		defer func() {
+			obj.Spec.Client.DefaultClientScopes = oldClientScopes
+		}()
+
 	}
 
 	uid, err := i.keycloakClient.CreateClient(obj.Spec.Client, realm)
@@ -152,6 +181,11 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 			obj.Spec.Client.Secret = ""
 			log.Info(fmt.Sprintf("Removed secret (generated from secretSeed) from keycloak client %v",
 				obj.Name))
+		}
+		if addedDefaultClientScope {
+			obj.Spec.Client.DefaultClientScopes = oldClientScopes
+			log.Info(fmt.Sprintf("Removed additional client scope (%s) from keycloak client %v",
+				getAdditionalDefaultClientScope(), obj.Name))
 		}
 
 		return i.client.Update(i.context, obj)
@@ -182,6 +216,7 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 	}
 
 	return err
+
 }
 
 func (i *ClusterActionRunner) UpdateClient(obj *v1alpha1.KeycloakClient, realm string) error {
