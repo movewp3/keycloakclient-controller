@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"slices"
+	"strings"
 
 	"github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/util"
@@ -135,13 +136,13 @@ func (i *ClusterActionRunner) CreateRealm(obj *v1alpha1.KeycloakRealm) error {
 	return err
 }
 
-func getAdditionalDefaultClientScope() string {
-
-	additionalDefaultClientScope, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPE")
+func getAdditionalDefaultClientScopes() []string {
+	additionalDefaultClientScopes, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPES")
 	if !found {
-		return ""
+		return []string{}
 	}
-	return additionalDefaultClientScope
+
+	return strings.Split(additionalDefaultClientScopes, ",")
 }
 
 func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm string) error {
@@ -150,22 +151,25 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 		return errors.Errorf("cannot perform client create when client is nil")
 	}
 
-	oldClientScopes := []string{}
+	oldClientScopes := obj.Spec.Client.DefaultClientScopes
 	addedDefaultClientScope := false
 
-	if getAdditionalDefaultClientScope() != "" && !slices.Contains(obj.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope()) && obj.Spec.Client.PublicClient {
-		log.Info(fmt.Sprintf("Add default client scope %v",
-			getAdditionalDefaultClientScope()))
-
-		oldClientScopes = obj.Spec.Client.DefaultClientScopes
-		addedDefaultClientScope = true
-		obj.Spec.Client.DefaultClientScopes = append(obj.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope())
-
+	additionalDefaultClientScopes := obj.Spec.Client.DefaultClientScopes
+	if obj.Spec.Client.PublicClient {
+		for _, scope := range getAdditionalDefaultClientScopes() {
+			if !slices.Contains(obj.Spec.Client.DefaultClientScopes, scope) {
+				addedDefaultClientScope = true
+				log.Info(fmt.Sprintf("Add default client scope %v",
+					getAdditionalDefaultClientScopes()))
+				additionalDefaultClientScopes = append(additionalDefaultClientScopes, scope)
+			}
+		}
 		defer func() {
 			obj.Spec.Client.DefaultClientScopes = oldClientScopes
 		}()
 
 	}
+	obj.Spec.Client.DefaultClientScopes = additionalDefaultClientScopes
 
 	uid, err := i.keycloakClient.CreateClient(obj.Spec.Client, realm)
 
@@ -184,8 +188,8 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 		}
 		if addedDefaultClientScope {
 			obj.Spec.Client.DefaultClientScopes = oldClientScopes
-			log.Info(fmt.Sprintf("Removed additional client scope (%s) from keycloak client %v",
-				getAdditionalDefaultClientScope(), obj.Name))
+			log.Info(fmt.Sprintf("Removed additional client scope from keycloak client %v",
+				obj.Name))
 		}
 
 		return i.client.Update(i.context, obj)
@@ -211,6 +215,23 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 
 		if err == nil {
 			obj.Spec.Client.ID = uid
+			//  keycloak CR is updated here with uid
+			log.Info(fmt.Sprintf("Update K8S Keycloakclient %v",
+				obj.Name))
+
+			// if secret was generated via seed secret, then dont store it
+			sha, errsha := util.GetClientShaCode(obj.Spec.Client.ClientID)
+			if errsha == nil && sha == obj.Spec.Client.Secret {
+				obj.Spec.Client.Secret = ""
+				log.Info(fmt.Sprintf("Removed secret (generated from secretSeed) from keycloak client %v",
+					obj.Name))
+			}
+			if addedDefaultClientScope {
+				obj.Spec.Client.DefaultClientScopes = oldClientScopes
+				log.Info(fmt.Sprintf("Removed additional client scope from keycloak client %v",
+					obj.Name))
+			}
+
 			return i.client.Update(i.context, obj)
 		}
 	}
