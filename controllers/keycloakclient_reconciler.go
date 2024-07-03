@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 
 	kc "github.com/movewp3/keycloakclient-controller/api/v1alpha1"
 	"github.com/movewp3/keycloakclient-controller/pkg/common"
@@ -171,33 +172,35 @@ func (i *DedicatedKeycloakClientReconciler) ReconcileScopeMappings(state *common
 	}
 }
 
-func getAdditionalDefaultClientScope() string {
-	additionalDefaultClientScope, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPE")
+func getAdditionalDefaultClientScopes() []string {
+	additionalDefaultClientScopes, found := os.LookupEnv("ADDITIONAL_DEFAULT_CLIENT_SCOPES")
 	if !found {
-		return ""
+		return []string{}
 	}
-	return additionalDefaultClientScope
+
+	return strings.Split(additionalDefaultClientScopes, ",")
 }
 
 func (i *DedicatedKeycloakClientReconciler) ReconcileClientScopes(state *common.ClientState, cr *kc.KeycloakClient, desired *common.DesiredClusterState) {
 
 	logKcc.Info(fmt.Sprintf("ReconcileClientScopes %s", cr.Spec.Client.Name))
 
-	oldClientScopes := []string{}
+	oldClientScopes := cr.Spec.Client.DefaultClientScopes
 	//addedDefaultClientScope := false
 
 	additionalDefaultClientScopes := cr.Spec.Client.DefaultClientScopes
-	if getAdditionalDefaultClientScope() != "" && !slices.Contains(cr.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope()) && cr.Spec.Client.PublicClient {
-		logKcc.Info(fmt.Sprintf("Add default client scope %v",
-			getAdditionalDefaultClientScope()))
-
-		oldClientScopes = cr.Spec.Client.DefaultClientScopes
-		//addedDefaultClientScope = true
-		additionalDefaultClientScopes = append(cr.Spec.Client.DefaultClientScopes, getAdditionalDefaultClientScope())
-
+	if cr.Spec.Client.PublicClient {
+		for _, scope := range getAdditionalDefaultClientScopes() {
+			if !slices.Contains(cr.Spec.Client.DefaultClientScopes, scope) {
+				logKcc.Info(fmt.Sprintf("Add default client scope %v",
+					getAdditionalDefaultClientScopes()))
+				additionalDefaultClientScopes = append(additionalDefaultClientScopes, scope)
+			}
+		}
 		defer func() {
 			cr.Spec.Client.DefaultClientScopes = oldClientScopes
 		}()
+
 	}
 
 	defaultClientScopes := model.FilterClientScopesByNames(state.AvailableClientScopes, additionalDefaultClientScopes)
