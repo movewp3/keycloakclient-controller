@@ -35,7 +35,7 @@ func WatchSecondaryResource(c controller.Controller, controllerName string, reso
 	}
 
 	// Set up the actual watch
-	err := c.Watch(source.Kind(mgr.GetCache(), objectTypetoWatch), &handler.EnqueueRequestForObject{})
+	err := c.Watch(source.Kind(mgr.GetCache(), objectTypetoWatch, &handler.EnqueueRequestForObject{}))
 
 	/*err := c.Watch(&source.Kind{Type: objectTypetoWatch}, &handler.EnqueueRequestForOwner{
 		IsController: true,

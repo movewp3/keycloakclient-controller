@@ -75,7 +75,8 @@ func (r *KeycloakReconciler) SetupWithManager(mgr ctrl.Manager) error {
 
 	// Watch for changes to primary resource Keycloak
 
-	err = c.Watch(source.Kind(mgr.GetCache(), &keycloakv1alpha1.Keycloak{}), &handler.EnqueueRequestForObject{})
+	err = c.Watch(source.Kind(mgr.GetCache(), &keycloakv1alpha1.Keycloak{}, &handler.TypedEnqueueRequestForObject[*keycloakv1alpha1.Keycloak]{}))
+
 	if err != nil {
 		return err
 	}
