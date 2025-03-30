@@ -15,8 +15,8 @@ jobs:
     - name: start minikube
       uses: manusa/actions-setup-minikube@v2.7.1
       with:
-        minikube version: 'v1.28.0'
-        kubernetes version: 'v1.25.0'
+        minikube version: 'v1.33.1'
+        kubernetes version: 'v1.33.3'
         driver: 'docker'
     - name: configure Minikube
       run: |
