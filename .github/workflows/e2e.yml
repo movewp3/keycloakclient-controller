@@ -13,7 +13,7 @@ jobs:
     - name: checkout project
       uses: actions/checkout@v3
     - name: start minikube
-      uses: manusa/actions-setup-minikube@vv2.13.1
+      uses: manusa/actions-setup-minikube@v2.13.1
       with:
         minikube version: 'v1.33.1'
         kubernetes version: 'v1.33.3'
