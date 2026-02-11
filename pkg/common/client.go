@@ -727,7 +727,7 @@ func (c *Client) login_admin(user, pass string) error {
 
 	if tokenRes.Error != "" {
 		logClient.Error(errors.New(tokenRes.Error), "error with request: %s", tokenRes.ErrorDescription)
-		return errors.Errorf(tokenRes.ErrorDescription)
+		return errors.New(tokenRes.ErrorDescription)
 	}
 
 	c.token = tokenRes.AccessToken
@@ -774,7 +774,7 @@ func (c *Client) login(client, credential string) error {
 
 	if tokenRes.Error != "" {
 		logClient.Error(errors.New(tokenRes.Error), fmt.Sprintf("error with request: %s", tokenRes.ErrorDescription))
-		return errors.Errorf(tokenRes.ErrorDescription)
+		return errors.New(tokenRes.ErrorDescription)
 	}
 
 	c.token = tokenRes.AccessToken

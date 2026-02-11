@@ -203,11 +203,11 @@ func (i *ClusterActionRunner) CreateClient(obj *v1alpha1.KeycloakClient, realm s
 		uid, err2 := i.keycloakClient.GetClientID(obj.Spec.Client.ClientID, realm)
 
 		if err2 != nil {
-			return errors.Errorf(fmt.Sprintf("cannot perform client create because of %s followed by %s", err.Error(), err2.Error()))
+			return errors.Errorf("cannot perform client create because of %s followed by %s", err.Error(), err2.Error())
 		}
 		err3 := i.keycloakClient.DeleteClient(uid, realm)
 		if err3 != nil {
-			return errors.Errorf(fmt.Sprintf("cannot perform client create because of %s followed by %s", err.Error(), err3.Error()))
+			return errors.Errorf("cannot perform client create because of %s followed by %s", err.Error(), err3.Error())
 		}
 		log.Info(fmt.Sprintf(" client %s deleted", obj.Spec.Client.Name))
 
