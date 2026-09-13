@@ -8,15 +8,15 @@ jobs:
     - name: Set up Go 1.x
       uses: actions/setup-go@v3
       with:
-        go-version: 1.24
+        go-version: 1.25
       id: go
     - name: checkout project
       uses: actions/checkout@v3
     - name: start minikube
       uses: manusa/actions-setup-minikube@v2.13.1
       with:
-        minikube version: 'v1.33.1'
-        kubernetes version: 'v1.33.0'
+        minikube version: 'v1.39.0'
+        kubernetes version: 'v1.35.0'
         driver: 'docker'
     - name: configure Minikube
       run: |
